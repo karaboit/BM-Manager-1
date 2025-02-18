@@ -10,10 +10,22 @@ interface MedicalPanelProps {
 }
 
 const MedicalPanel = ({ boarderId }: MedicalPanelProps) => {
+  const { selectedChildId, currentUser } = useDashboardStore();
   const [selectedBoarderId, setSelectedBoarderId] = useState<string>(
-    boarderId || "",
+    boarderId || selectedChildId || "",
   );
-  const { currentUser } = useDashboardStore();
+
+  // Update selectedBoarderId when selectedChildId changes
+  React.useEffect(() => {
+    if (currentUser?.role === "Boarder Parent") {
+      setSelectedBoarderId(selectedChildId || "");
+    }
+  }, [selectedChildId, currentUser?.role]);
+
+  // Handle boarder selection
+  const handleBoarderSelect = (id: string) => {
+    setSelectedBoarderId(id);
+  };
   const [stats] = useState({
     activeVisits: 3,
     pendingMedications: 5,
@@ -22,7 +34,11 @@ const MedicalPanel = ({ boarderId }: MedicalPanelProps) => {
   });
 
   // If user is a boarder, prefect, or parent, they can only see their own/child's records
-  if (boarderId || currentUser?.role === "Medical Staff") {
+  if (
+    boarderId ||
+    currentUser?.role === "Medical Staff" ||
+    currentUser?.role === "Boarder Parent"
+  ) {
     return (
       <div className="p-6 space-y-6">
         {currentUser?.role === "Medical Staff" && (
@@ -54,11 +70,25 @@ const MedicalPanel = ({ boarderId }: MedicalPanelProps) => {
                 },
               ]}
               selectedBoarderId={selectedBoarderId}
-              onBoarderSelect={setSelectedBoarderId}
+              onBoarderSelect={handleBoarderSelect}
             />
           ) : null}
-          {selectedBoarderId || boarderId ? (
+          {selectedBoarderId ||
+          boarderId ||
+          (currentUser?.role === "Boarder Parent" && selectedChildId) ? (
             <div className="flex-1 space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">
+                  Medical Records -{" "}
+                  {selectedBoarderId === "B001"
+                    ? "John Smith"
+                    : selectedBoarderId === "B002"
+                      ? "Jane Doe"
+                      : selectedBoarderId === "B003"
+                        ? "Bob Wilson"
+                        : "Unknown Boarder"}
+                </h2>
+              </div>
               <MedicalOverview stats={stats} />
               <MedicalTabs />
             </div>

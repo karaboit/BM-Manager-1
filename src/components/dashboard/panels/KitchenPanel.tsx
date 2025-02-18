@@ -16,44 +16,20 @@ import MenuTemplates from "./KitchenPanel/MenuTemplates";
 import DietaryRequirements from "./KitchenPanel/DietaryRequirements";
 import { useDashboardStore } from "@/lib/store";
 
-const defaultDietaryRequirements = [
+const defaultMealPlans = [
   {
-    boarderId: "B001",
-    name: "John Smith",
-    restrictions: ["Vegetarian"],
-    allergies: ["Peanuts", "Shellfish"],
-    notes: "Severe peanut allergy",
-  },
-  {
-    boarderId: "B002",
-    name: "Jane Doe",
-    restrictions: ["Halal"],
-    allergies: ["Dairy"],
-    notes: "Lactose intolerant",
-  },
-];
-
-const defaultTemplates = [
-  {
-    id: "1",
-    name: "Standard Breakfast",
-    type: "breakfast",
-    items: "Eggs, Toast, Cereal, Fruit",
-    dietaryNotes: "Vegetarian options available",
-  },
-  {
-    id: "2",
-    name: "Light Lunch",
-    type: "lunch",
-    items: "Sandwiches, Salad, Fruit",
-    dietaryNotes: "Vegetarian options available",
-  },
-  {
-    id: "3",
-    name: "Standard Dinner",
-    type: "dinner",
-    items: "Chicken, Rice, Vegetables",
-    dietaryNotes: "Vegetarian options available",
+    meal_id: "1",
+    meal_date: "2024-03-21",
+    meal_time: "Breakfast",
+    title: "Continental Breakfast",
+    description: "Eggs, Toast, Cereal, Fruit",
+    expected_count: 150,
+    packed_meals: [
+      { event: "Weekend Sports Tournament", count: 5 },
+      { event: "Field Trip", count: 3 },
+    ],
+    created_at: "2024-03-21T10:00:00Z",
+    updated_at: "2024-03-21T10:00:00Z",
   },
 ];
 
@@ -61,81 +37,12 @@ interface KitchenPanelProps {
   showDashboard?: boolean;
 }
 
-const generateMealData = (date: Date) => ({
-  breakfast: {
-    time: "7:00 - 8:30",
-    menu: "Eggs, Toast, Cereal, Fruit",
-    dietaryNotes: "Vegetarian options available",
-    status: "pending",
-    expectedBoarders: 142,
-    outsideMeals: 3,
-    dietaryRequirements: [
-      { type: "Vegetarian", count: 12 },
-      { type: "Halal", count: 8 },
-      { type: "Gluten Free", count: 3 },
-    ],
-    allergies: [
-      { type: "Peanuts", count: 4 },
-      { type: "Dairy", count: 6 },
-    ],
-    absentBoarders: [
-      { reason: "Leave", count: 5 },
-      { reason: "Off Campus", count: 3 },
-    ],
-  },
-  lunch: {
-    time: "12:00 - 13:30",
-    menu: "Sandwiches, Salad, Fruit",
-    dietaryNotes: "Vegetarian options available",
-    status: "pending",
-    expectedBoarders: 140,
-    outsideMeals: 5,
-    dietaryRequirements: [
-      { type: "Vegetarian", count: 12 },
-      { type: "Halal", count: 8 },
-      { type: "Gluten Free", count: 3 },
-    ],
-    allergies: [
-      { type: "Peanuts", count: 4 },
-      { type: "Dairy", count: 6 },
-    ],
-    absentBoarders: [
-      { reason: "Leave", count: 8 },
-      { reason: "Off Campus", count: 2 },
-    ],
-  },
-  dinner: {
-    time: "18:00 - 19:30",
-    menu: "Chicken, Rice, Vegetables",
-    dietaryNotes: "Vegetarian options available",
-    status: "pending",
-    expectedBoarders: 145,
-    outsideMeals: 2,
-    dietaryRequirements: [
-      { type: "Vegetarian", count: 12 },
-      { type: "Halal", count: 8 },
-      { type: "Gluten Free", count: 3 },
-    ],
-    allergies: [
-      { type: "Peanuts", count: 4 },
-      { type: "Dairy", count: 6 },
-    ],
-    absentBoarders: [
-      { reason: "Leave", count: 4 },
-      { reason: "Off Campus", count: 1 },
-    ],
-  },
-});
-
 const KitchenPanel = ({ showDashboard = false }: KitchenPanelProps) => {
   const { currentUser, activePanel } = useDashboardStore();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState("meal-planner");
   const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"today" | "future">("today");
-  const [selectedDateMeals, setSelectedDateMeals] = useState(
-    generateMealData(new Date()),
-  );
 
   const todaysMeals = {
     breakfast: {
@@ -145,6 +52,10 @@ const KitchenPanel = ({ showDashboard = false }: KitchenPanelProps) => {
       status: "completed",
       expectedBoarders: 150,
       outsideMeals: 5,
+      packed_meals: [
+        { event: "Weekend Sports Tournament", count: 5 },
+        { event: "Field Trip", count: 3 },
+      ],
       dietaryRequirements: [
         { type: "Vegetarian", count: 12 },
         { type: "Halal", count: 8 },
@@ -166,6 +77,7 @@ const KitchenPanel = ({ showDashboard = false }: KitchenPanelProps) => {
       status: "in-progress",
       expectedBoarders: 145,
       outsideMeals: 8,
+      packed_meals: [{ event: "Weekend Sports Tournament", count: 8 }],
       dietaryRequirements: [
         { type: "Vegetarian", count: 12 },
         { type: "Halal", count: 8 },
@@ -187,6 +99,7 @@ const KitchenPanel = ({ showDashboard = false }: KitchenPanelProps) => {
       status: "pending",
       expectedBoarders: 148,
       outsideMeals: 2,
+      packed_meals: [],
       dietaryRequirements: [
         { type: "Vegetarian", count: 12 },
         { type: "Halal", count: 8 },
@@ -203,16 +116,85 @@ const KitchenPanel = ({ showDashboard = false }: KitchenPanelProps) => {
     },
   };
 
+  const generateMealData = (date: Date) => ({
+    breakfast: {
+      time: "7:00 - 8:30",
+      menu: "Eggs, Toast, Cereal, Fruit",
+      dietaryNotes: "Vegetarian options available",
+      status: "pending",
+      expectedBoarders: 142,
+      outsideMeals: 3,
+      packed_meals: [],
+      dietaryRequirements: [
+        { type: "Vegetarian", count: 12 },
+        { type: "Halal", count: 8 },
+        { type: "Gluten Free", count: 3 },
+      ],
+      allergies: [
+        { type: "Peanuts", count: 4 },
+        { type: "Dairy", count: 6 },
+      ],
+      absentBoarders: [
+        { reason: "Leave", count: 5 },
+        { reason: "Off Campus", count: 3 },
+      ],
+    },
+    lunch: {
+      time: "12:00 - 13:30",
+      menu: "Sandwiches, Salad, Fruit",
+      dietaryNotes: "Vegetarian options available",
+      status: "pending",
+      expectedBoarders: 140,
+      outsideMeals: 5,
+      packed_meals: [],
+      dietaryRequirements: [
+        { type: "Vegetarian", count: 12 },
+        { type: "Halal", count: 8 },
+        { type: "Gluten Free", count: 3 },
+      ],
+      allergies: [
+        { type: "Peanuts", count: 4 },
+        { type: "Dairy", count: 6 },
+      ],
+      absentBoarders: [
+        { reason: "Leave", count: 8 },
+        { reason: "Off Campus", count: 2 },
+      ],
+    },
+    dinner: {
+      time: "18:00 - 19:30",
+      menu: "Chicken, Rice, Vegetables",
+      dietaryNotes: "Vegetarian options available",
+      status: "pending",
+      expectedBoarders: 145,
+      outsideMeals: 2,
+      packed_meals: [],
+      dietaryRequirements: [
+        { type: "Vegetarian", count: 12 },
+        { type: "Halal", count: 8 },
+        { type: "Gluten Free", count: 3 },
+      ],
+      allergies: [
+        { type: "Peanuts", count: 4 },
+        { type: "Dairy", count: 6 },
+      ],
+      absentBoarders: [
+        { reason: "Leave", count: 4 },
+        { reason: "Off Campus", count: 1 },
+      ],
+    },
+  });
+
   const handleDateSelect = (date: Date | undefined) => {
     if (date && date.getTime() !== selectedDate.getTime()) {
       setSelectedDate(date);
       setViewMode("future");
-      setSelectedDateMeals(generateMealData(date));
     }
   };
 
   const handleExportPDF = async () => {
-    const meals = viewMode === "today" ? todaysMeals : selectedDateMeals;
+    const meals =
+      viewMode === "today" ? todaysMeals : generateMealData(selectedDate);
     const dateStr =
       viewMode === "today" ? "Today" : selectedDate.toLocaleDateString();
 
@@ -243,8 +225,19 @@ const KitchenPanel = ({ showDashboard = false }: KitchenPanelProps) => {
         yPos += 7;
         doc.text(`Outside Meals: ${details.outsideMeals}`, 25, yPos);
         yPos += 7;
+
+        // Packed meals
+        if (details.packed_meals && details.packed_meals.length > 0) {
+          doc.text("Packed Meals:", 25, yPos);
+          yPos += 7;
+          details.packed_meals.forEach((packed) => {
+            doc.text(`  ${packed.event}: ${packed.count}`, 25, yPos);
+            yPos += 7;
+          });
+        }
+
         doc.text(
-          `Total: ${details.expectedBoarders + details.outsideMeals}`,
+          `Total: ${details.expectedBoarders + details.outsideMeals + (details.packed_meals?.reduce((acc, meal) => acc + meal.count, 0) || 0)}`,
           25,
           yPos,
         );
@@ -346,7 +339,9 @@ const KitchenPanel = ({ showDashboard = false }: KitchenPanelProps) => {
             </CardHeader>
             <CardContent className="space-y-4">
               {Object.entries(
-                viewMode === "today" ? todaysMeals : selectedDateMeals,
+                viewMode === "today"
+                  ? todaysMeals
+                  : generateMealData(selectedDate),
               ).map(([meal, details]) => (
                 <div key={meal} className="space-y-2">
                   <div
@@ -399,9 +394,27 @@ const KitchenPanel = ({ showDashboard = false }: KitchenPanelProps) => {
                             <p className="text-sm">
                               Outside Meals: {details.outsideMeals}
                             </p>
-                            <p className="text-sm font-medium">
+                            {details.packed_meals &&
+                              details.packed_meals.length > 0 && (
+                                <div>
+                                  <p className="text-sm font-medium mt-2">
+                                    Packed Meals:
+                                  </p>
+                                  {details.packed_meals.map((packed, index) => (
+                                    <p key={index} className="text-sm pl-2">
+                                      • {packed.event}: {packed.count}
+                                    </p>
+                                  ))}
+                                </div>
+                              )}
+                            <p className="text-sm font-medium mt-2">
                               Total:{" "}
-                              {details.expectedBoarders + details.outsideMeals}
+                              {details.expectedBoarders +
+                                details.outsideMeals +
+                                (details.packed_meals?.reduce(
+                                  (acc, meal) => acc + meal.count,
+                                  0,
+                                ) || 0)}
                             </p>
                           </div>
                         </div>
@@ -461,7 +474,7 @@ const KitchenPanel = ({ showDashboard = false }: KitchenPanelProps) => {
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="h-5 w-5 text-yellow-500" />
                       <span className="font-semibold">
-                        {defaultDietaryRequirements.length}
+                        {defaultMealPlans.length}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -472,7 +485,7 @@ const KitchenPanel = ({ showDashboard = false }: KitchenPanelProps) => {
                     <div className="flex items-center gap-2">
                       <FileText className="h-5 w-5 text-green-500" />
                       <span className="font-semibold">
-                        {defaultTemplates.length}
+                        {defaultMealPlans.length}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -539,7 +552,7 @@ const KitchenPanel = ({ showDashboard = false }: KitchenPanelProps) => {
         </TabsList>
 
         <TabsContent value="meal-planner" className="space-y-4">
-          <MealPlanner onSave={console.log} templates={defaultTemplates} />
+          <MealPlanner onSave={console.log} templates={defaultMealPlans} />
         </TabsContent>
 
         <TabsContent value="templates" className="space-y-4">
@@ -551,7 +564,7 @@ const KitchenPanel = ({ showDashboard = false }: KitchenPanelProps) => {
         </TabsContent>
 
         <TabsContent value="dietary-requirements" className="space-y-4">
-          <DietaryRequirements requirements={defaultDietaryRequirements} />
+          <DietaryRequirements requirements={defaultMealPlans} />
         </TabsContent>
       </Tabs>
     </div>

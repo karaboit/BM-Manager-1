@@ -37,7 +37,11 @@ export interface Leave {
   endDate: string;
   reason: string;
   type: "Family" | "Medical" | "Personal";
-  status: "Pending Parent" | "Pending Staff" | "Approved" | "Rejected";
+  status: "Pending Parent" | "Pending House Master" | "Approved" | "Rejected";
+  approvedByParent?: boolean;
+  approvedByHouseMaster?: boolean;
+  parentApprovalDate?: string;
+  houseMasterApprovalDate?: string;
 }
 
 export interface ClinicVisit {

@@ -47,7 +47,7 @@ const defaultSurveys: WellbeingSurvey[] = [
 
 const WellbeingPanel = ({ surveys = defaultSurveys }: WellbeingPanelProps) => {
   const [isNewSurveyOpen, setIsNewSurveyOpen] = useState(false);
-  const { currentUser } = useDashboardStore();
+  const { currentUser, selectedChildId } = useDashboardStore();
   const isMedicalStaff = currentUser?.role === "Medical Staff";
 
   const calculateRiskLevel = (score: number) => {
@@ -56,99 +56,203 @@ const WellbeingPanel = ({ surveys = defaultSurveys }: WellbeingPanelProps) => {
     return "High";
   };
 
+  // Filter surveys based on selected child for parent view
+  const filteredSurveys =
+    currentUser?.role === "Boarder Parent" && selectedChildId
+      ? surveys.filter((survey) => survey.boarder_id === selectedChildId)
+      : surveys;
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Wellbeing Survey</h1>
-        {!isMedicalStaff && (
-          <Dialog open={isNewSurveyOpen} onOpenChange={setIsNewSurveyOpen}>
+        <div>
+          <h1 className="text-2xl font-bold">Wellbeing Survey</h1>
+          {currentUser?.role === "Boarder Parent" && (
+            <p className="text-muted-foreground">
+              {selectedChildId === "B001"
+                ? "John Smith"
+                : selectedChildId === "B002"
+                  ? "Jane Smith"
+                  : selectedChildId === "B003"
+                    ? "Bob Smith"
+                    : "Select a child"}
+            </p>
+          )}
+        </div>
+        {isMedicalStaff ? (
+          <Dialog>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Take Survey
+                Create Survey
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Wellbeing Survey</DialogTitle>
+                <DialogTitle>Create New Survey</DialogTitle>
               </DialogHeader>
               <div className="grid gap-6 py-4">
                 <div className="space-y-2">
-                  <Label>How would you rate your overall mood today?</Label>
-                  <RadioGroup defaultValue="3" className="flex gap-4">
-                    {[1, 2, 3, 4, 5].map((value) => (
-                      <div key={value} className="flex items-center space-x-2">
-                        <RadioGroupItem
-                          value={value.toString()}
-                          id={`mood-${value}`}
-                        />
-                        <Label htmlFor={`mood-${value}`}>{value}</Label>
-                      </div>
-                    ))}
+                  <Label>Target Group</Label>
+                  <RadioGroup defaultValue="all" className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="all" id="all" />
+                      <Label htmlFor="all">All Boarders</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="house" id="house" />
+                      <Label htmlFor="house">Specific House</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="individual" id="individual" />
+                      <Label htmlFor="individual">Individual Boarder</Label>
+                    </div>
                   </RadioGroup>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>How many hours of sleep did you get last night?</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="12"
-                    placeholder="Hours of sleep"
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="stress" />
-                  <Label htmlFor="stress">
-                    Have you felt stressed or anxious recently?
-                  </Label>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>
-                    How lonely or isolated have you felt in the past few days?
-                  </Label>
-                  <RadioGroup defaultValue="3" className="flex gap-4">
-                    {[1, 2, 3, 4, 5].map((value) => (
-                      <div key={value} className="flex items-center space-x-2">
-                        <RadioGroupItem
-                          value={value.toString()}
-                          id={`lonely-${value}`}
-                        />
-                        <Label htmlFor={`lonely-${value}`}>{value}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="physical" />
-                    <Label htmlFor="physical">
-                      Any physical discomfort or pain you want to report?
-                    </Label>
+                  <Label>Survey Questions</Label>
+                  <div className="space-y-4 border rounded-md p-4">
+                    <div className="space-y-2">
+                      <Label>Mood Rating (1-5)</Label>
+                      <Input type="checkbox" defaultChecked />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Sleep Hours</Label>
+                      <Input type="checkbox" defaultChecked />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Stress Level</Label>
+                      <Input type="checkbox" defaultChecked />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Loneliness Scale</Label>
+                      <Input type="checkbox" defaultChecked />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Physical Discomfort</Label>
+                      <Input type="checkbox" defaultChecked />
+                    </div>
                   </div>
-                  <Textarea placeholder="Please describe any physical discomfort..." />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Additional Notes</Label>
+                  <Textarea placeholder="Any additional instructions or notes for the survey..." />
                 </div>
               </div>
               <div className="flex justify-end gap-2">
+                <Button variant="outline">Cancel</Button>
                 <Button
-                  variant="outline"
-                  onClick={() => setIsNewSurveyOpen(false)}
+                  onClick={() => {
+                    alert("Survey created and sent to selected recipients");
+                  }}
                 >
-                  Cancel
-                </Button>
-                <Button onClick={() => setIsNewSurveyOpen(false)}>
-                  Submit Survey
+                  Create & Send Survey
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
+        ) : (
+          !isMedicalStaff &&
+          currentUser?.role !== "Boarder Parent" && (
+            <Dialog open={isNewSurveyOpen} onOpenChange={setIsNewSurveyOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Take Survey
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Wellbeing Survey</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-6 py-4">
+                  <div className="space-y-2">
+                    <Label>How would you rate your overall mood today?</Label>
+                    <RadioGroup defaultValue="3" className="flex gap-4">
+                      {[1, 2, 3, 4, 5].map((value) => (
+                        <div
+                          key={value}
+                          className="flex items-center space-x-2"
+                        >
+                          <RadioGroupItem
+                            value={value.toString()}
+                            id={`mood-${value}`}
+                          />
+                          <Label htmlFor={`mood-${value}`}>{value}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>
+                      How many hours of sleep did you get last night?
+                    </Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="12"
+                      placeholder="Hours of sleep"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="stress" />
+                    <Label htmlFor="stress">
+                      Have you felt stressed or anxious recently?
+                    </Label>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>
+                      How lonely or isolated have you felt in the past few days?
+                    </Label>
+                    <RadioGroup defaultValue="3" className="flex gap-4">
+                      {[1, 2, 3, 4, 5].map((value) => (
+                        <div
+                          key={value}
+                          className="flex items-center space-x-2"
+                        >
+                          <RadioGroupItem
+                            value={value.toString()}
+                            id={`lonely-${value}`}
+                          />
+                          <Label htmlFor={`lonely-${value}`}>{value}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox id="physical" />
+                      <Label htmlFor="physical">
+                        Any physical discomfort or pain you want to report?
+                      </Label>
+                    </div>
+                    <Textarea placeholder="Please describe any physical discomfort..." />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsNewSurveyOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={() => setIsNewSurveyOpen(false)}>
+                    Submit Survey
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )
         )}
       </div>
 
-      {isMedicalStaff ? (
+      {isMedicalStaff && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader>
@@ -196,7 +300,7 @@ const WellbeingPanel = ({ surveys = defaultSurveys }: WellbeingPanelProps) => {
             </CardContent>
           </Card>
         </div>
-      ) : null}
+      )}
 
       <Card>
         <CardHeader>
@@ -219,7 +323,7 @@ const WellbeingPanel = ({ surveys = defaultSurveys }: WellbeingPanelProps) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {surveys.map((survey) => (
+              {filteredSurveys.map((survey) => (
                 <TableRow key={survey.survey_id}>
                   <TableCell>
                     {new Date(survey.created_at).toLocaleDateString()}

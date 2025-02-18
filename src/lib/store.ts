@@ -15,7 +15,8 @@ type ActivePanel =
   | "attendance"
   | "leave"
   | "discipline"
-  | "wellbeing";
+  | "wellbeing"
+  | "events";
 
 interface AttendanceRecord {
   status: "Present" | "Late" | "Absent" | "Unmarked";
@@ -47,8 +48,6 @@ const getRoleBasedPanels = (role: UserRole): ActivePanel[] => {
     "dashboard",
     "leave",
     "medical",
-    "kitchen",
-    "rooms",
     "announcements",
     "wellbeing",
   ];
@@ -62,12 +61,7 @@ const getRoleBasedPanels = (role: UserRole): ActivePanel[] => {
         "audit",
         "maintenance",
         "announcements",
-        "medical",
         "rooms",
-        "kitchen",
-        "attendance",
-        "leave",
-        "discipline",
       ];
     case "Director":
       return [
@@ -79,10 +73,9 @@ const getRoleBasedPanels = (role: UserRole): ActivePanel[] => {
         "announcements",
         "medical",
         "rooms",
-        "kitchen",
         "attendance",
         "leave",
-        "discipline",
+        "events",
       ];
     case "Medical Staff":
       return ["medical", "announcements", "wellbeing"];
@@ -99,6 +92,7 @@ const getRoleBasedPanels = (role: UserRole): ActivePanel[] => {
         "maintenance",
         "medical",
         "wellbeing",
+        "events",
       ];
     case "Boarder":
       return boarderPanels;
@@ -107,6 +101,7 @@ const getRoleBasedPanels = (role: UserRole): ActivePanel[] => {
     case "Support Staff":
       return ["announcements"];
     case "Prefect":
+      // Prefects are boarders with additional responsibilities
       return [...boarderPanels, "attendance", "discipline"];
     case "Deputy House Master":
       return [

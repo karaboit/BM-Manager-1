@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDashboardStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -42,17 +43,68 @@ const defaultLeaveRequests: Leave[] = [
     endDate: "2024-03-28",
     reason: "Personal matter",
     type: "Personal",
-    status: "Pending Staff",
+    status: "Pending House Master",
   },
 ];
 
-const LeavePanel = ({
-  leaveRequests = defaultLeaveRequests,
-}: LeavePanelProps) => {
+const LeavePanel = () => {
+  const { currentUser, selectedChildId } = useDashboardStore();
+  const [requests, setRequests] = useState(defaultLeaveRequests);
+
+  const handleApprove = (leaveId: string) => {
+    setRequests((prevRequests) =>
+      prevRequests.map((request) => {
+        if (request.id === leaveId) {
+          if (currentUser?.role === "Boarder Parent") {
+            return {
+              ...request,
+              status: "Pending House Master",
+              approvedByParent: true,
+              parentApprovalDate: new Date().toISOString(),
+            };
+          } else if (currentUser?.role === "House Master") {
+            return {
+              ...request,
+              status: "Approved",
+              approvedByHouseMaster: true,
+              houseMasterApprovalDate: new Date().toISOString(),
+            };
+          }
+        }
+        return request;
+      }),
+    );
+  };
+
+  const handleReject = (leaveId: string) => {
+    setRequests((prevRequests) =>
+      prevRequests.map((request) =>
+        request.id === leaveId ? { ...request, status: "Rejected" } : request,
+      ),
+    );
+  };
+
+  const filteredRequests =
+    currentUser?.role === "Boarder Parent" && selectedChildId
+      ? requests.filter((request) => request.boarderId === selectedChildId)
+      : requests;
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Leave Management</h1>
+        <div>
+          <h1 className="text-2xl font-bold">Leave Management</h1>
+          {currentUser?.role === "Boarder Parent" && (
+            <p className="text-muted-foreground">
+              {selectedChildId === "B001"
+                ? "John Smith"
+                : selectedChildId === "B002"
+                  ? "Jane Smith"
+                  : selectedChildId === "B003"
+                    ? "Bob Smith"
+                    : "Select a child"}
+            </p>
+          )}
+        </div>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
           New Leave Request
@@ -70,7 +122,7 @@ const LeavePanel = ({
           <CardContent>
             <div className="text-3xl font-bold">
               {
-                leaveRequests.filter((request) =>
+                filteredRequests.filter((request) =>
                   request.status.startsWith("Pending"),
                 ).length
               }
@@ -88,8 +140,9 @@ const LeavePanel = ({
           <CardContent>
             <div className="text-3xl font-bold">
               {
-                leaveRequests.filter((request) => request.status === "Approved")
-                  .length
+                filteredRequests.filter(
+                  (request) => request.status === "Approved",
+                ).length
               }
             </div>
           </CardContent>
@@ -105,8 +158,9 @@ const LeavePanel = ({
           <CardContent>
             <div className="text-3xl font-bold">
               {
-                leaveRequests.filter((request) => request.status === "Rejected")
-                  .length
+                filteredRequests.filter(
+                  (request) => request.status === "Rejected",
+                ).length
               }
             </div>
           </CardContent>
@@ -127,10 +181,11 @@ const LeavePanel = ({
                 <TableHead>End Date</TableHead>
                 <TableHead>Reason</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {leaveRequests.map((request) => (
+              {filteredRequests.map((request) => (
                 <TableRow key={request.id}>
                   <TableCell>{request.boarderId}</TableCell>
                   <TableCell>{request.type}</TableCell>
@@ -149,6 +204,31 @@ const LeavePanel = ({
                     >
                       {request.status}
                     </span>
+                  </TableCell>
+                  <TableCell>
+                    {((currentUser?.role === "Boarder Parent" &&
+                      request.status === "Pending Parent") ||
+                      (currentUser?.role === "House Master" &&
+                        request.status === "Pending House Master")) && (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-green-100 hover:bg-green-200"
+                          onClick={() => handleApprove(request.id)}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-red-100 hover:bg-red-200"
+                          onClick={() => handleReject(request.id)}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

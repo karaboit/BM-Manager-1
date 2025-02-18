@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, lazy, Suspense } from "react";
+
+const SystemDashboard = lazy(() => import("./panels/SystemDashboard"));
 import { useDashboardStore } from "@/lib/store";
 import BoarderDashboard from "./panels/BoarderDashboard";
 import UserManagementPanel from "./panels/UserManagementPanel";
@@ -12,6 +14,7 @@ import AttendancePanel from "./panels/AttendancePanel";
 import LeavePanel from "./panels/LeavePanel";
 import DisciplinePanel from "./panels/DisciplinePanel";
 import WellbeingPanel from "./panels/WellbeingPanel";
+import EventsPanel from "./panels/EventsPanel";
 import KitchenPanel from "./panels/KitchenPanel";
 import DirectorDashboard from "./panels/DirectorDashboard";
 
@@ -28,7 +31,8 @@ type ActivePanel =
   | "attendance"
   | "leave"
   | "discipline"
-  | "wellbeing";
+  | "wellbeing"
+  | "events";
 
 interface MainContentProps {
   activePanel?: ActivePanel;
@@ -39,13 +43,33 @@ const MainContent: React.FC<MainContentProps> = ({
 }) => {
   const currentPanel = activePanel;
   const [loading, setLoading] = useState(false);
-  const { currentUser } = useDashboardStore();
+  const { currentUser, selectedChildId } = useDashboardStore();
 
   const renderPanel = () => {
     // Show appropriate dashboard based on user role
     if (currentPanel === "dashboard") {
-      if (currentUser?.role === "Boarder" || currentUser?.role === "Prefect") {
-        return <BoarderDashboard />;
+      if (
+        currentUser?.role === "Boarder" ||
+        currentUser?.role === "Prefect" || // Prefects see the boarder dashboard since they are boarders
+        currentUser?.role === "Boarder Parent"
+      ) {
+        return (
+          <BoarderDashboard
+            isParentView={currentUser?.role === "Boarder Parent"}
+            boarder={{
+              name: currentUser?.name || "Unknown User",
+              room:
+                selectedChildId === "B001"
+                  ? "Room 101"
+                  : selectedChildId === "B002"
+                    ? "Room 102"
+                    : selectedChildId === "B003"
+                      ? "Room 103"
+                      : "Room 101",
+              house: "East Wing",
+            }}
+          />
+        );
       } else if (currentUser?.role === "Kitchen Staff") {
         return <KitchenPanel showDashboard={true} />;
       } else if (
@@ -54,8 +78,14 @@ const MainContent: React.FC<MainContentProps> = ({
         currentUser?.role === "Deputy House Master"
       ) {
         return <DirectorDashboard />;
+      } else if (currentUser?.role === "System Administrator") {
+        return (
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <SystemDashboard />
+          </React.Suspense>
+        );
       } else {
-        return <UserManagementPanel />;
+        return <DirectorDashboard />;
       }
     }
 
@@ -90,7 +120,11 @@ const MainContent: React.FC<MainContentProps> = ({
           return (
             <MedicalPanel
               boarderId={
-                currentUser?.role === "Boarder" ? currentUser.id : undefined
+                currentUser?.role === "Boarder"
+                  ? currentUser.id
+                  : currentUser?.role === "Boarder Parent"
+                    ? selectedChildId
+                    : undefined
               }
             />
           );
@@ -110,6 +144,8 @@ const MainContent: React.FC<MainContentProps> = ({
         return <KitchenPanel />;
       case "wellbeing":
         return <WellbeingPanel />;
+      case "events":
+        return <EventsPanel />;
       default:
         return <UserManagementPanel />;
     }

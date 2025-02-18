@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,8 +9,9 @@ import {
   Bell,
   UtensilsCrossed,
   Activity,
+  Heart,
+  AlertTriangle,
 } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 
 interface BoarderDashboardProps {
   boarder?: {
@@ -18,21 +19,18 @@ interface BoarderDashboardProps {
     room: string;
     house: string;
   };
-  schedule?: {
-    time: string;
-    activity: string;
-  }[];
-  announcements?: {
-    id: string;
-    title: string;
-    message: string;
-    date: string;
-  }[];
-  upcomingMeals?: {
-    type: string;
-    time: string;
-    menu: string[];
-  }[];
+  isParentView?: boolean;
+}
+
+interface Event {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  registered: boolean;
+  mealTimings?: string[];
+  packedMeals?: string[];
 }
 
 const BoarderDashboard = ({
@@ -41,33 +39,74 @@ const BoarderDashboard = ({
     room: "Room 101",
     house: "East Wing",
   },
-  schedule = [
-    { time: "06:30", activity: "Wake-up Call" },
-    { time: "07:00", activity: "Breakfast" },
-    { time: "07:30", activity: "Room Inspection" },
-    { time: "22:00", activity: "Lights Out" },
-  ],
-  announcements = [
+  isParentView = false,
+}: BoarderDashboardProps) => {
+  const [events, setEvents] = useState<Event[]>([
     {
       id: "1",
-      title: "Weekend Activities",
-      message: "Sign up for weekend sports activities",
-      date: "2024-03-22",
+      title: "Weekend Sports Tournament",
+      date: "2024-03-25",
+      time: "14:00",
+      location: "Sports Field",
+      registered: false,
+      mealTimings: ["lunch", "dinner"],
+      packedMeals: [],
     },
-  ],
-  upcomingMeals = [
+  ]);
+
+  const [wellbeingScore, setWellbeingScore] = useState(85);
+  const [attendanceRate, setAttendanceRate] = useState(95);
+  const [disciplinaryPoints, setDisciplinaryPoints] = useState(2);
+  const [notifications, setNotifications] = useState([
     {
-      type: "Breakfast",
-      time: "07:00 - 08:00",
-      menu: ["Eggs & Toast", "Fresh Fruit", "Orange Juice"],
+      id: "1",
+      title: "New Event",
+      message: "Weekend Sports Tournament registration is open",
+      time: "5 minutes ago",
+      type: "event",
     },
     {
-      type: "Lunch",
-      time: "12:00 - 13:00",
-      menu: ["Chicken Sandwich", "Garden Salad", "Apple"],
+      id: "2",
+      title: "Wellbeing Check",
+      message: "Please complete your daily wellbeing survey",
+      time: "1 hour ago",
+      type: "wellbeing",
     },
-  ],
-}: BoarderDashboardProps) => {
+  ]);
+
+  const handleEventRegistration = (
+    eventId: string,
+    withPackedMeals: boolean = false,
+  ) => {
+    setEvents((prevEvents) =>
+      prevEvents.map((event) => {
+        if (event.id === eventId) {
+          return {
+            ...event,
+            registered: true,
+            packedMeals: withPackedMeals ? event.mealTimings || [] : [],
+          };
+        }
+        return event;
+      }),
+    );
+  };
+
+  const handleEventCancellation = (eventId: string) => {
+    setEvents((prevEvents) =>
+      prevEvents.map((event) => {
+        if (event.id === eventId) {
+          return {
+            ...event,
+            registered: false,
+            packedMeals: [],
+          };
+        }
+        return event;
+      }),
+    );
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -80,159 +119,169 @@ const BoarderDashboard = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Medication Reminders */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Activity className="mr-2 h-5 w-5 text-blue-500" />
-              Medication Schedule
+              <Heart className="mr-2 h-5 w-5 text-pink-500" />
+              Wellbeing Score
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[200px]">
-              <div className="space-y-4">
-                {[
-                  {
-                    time: "08:00",
-                    medicine: "Allergy Medication",
-                    taken: false,
-                  },
-                  { time: "13:00", medicine: "Vitamin C", taken: true },
-                  {
-                    time: "20:00",
-                    medicine: "Allergy Medication",
-                    taken: false,
-                  },
-                ].map((med, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between border-b pb-2 last:border-0"
-                  >
-                    <div>
-                      <p className="font-medium">{med.medicine}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {med.time}
-                      </p>
-                    </div>
-                    <Checkbox checked={med.taken} className="h-6 w-6" />
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-        {/* Daily Schedule */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Clock className="mr-2 h-5 w-5" />
-              Today's Schedule
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[200px]">
-              <div className="space-y-4">
-                {schedule.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between border-b pb-2 last:border-0"
-                  >
-                    <span className="font-medium">{item.time}</span>
-                    <span className="text-muted-foreground">
-                      {item.activity}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
+            <div className="text-3xl font-bold">{wellbeingScore}%</div>
           </CardContent>
         </Card>
 
-        {/* Announcements */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Bell className="mr-2 h-5 w-5" />
-              Announcements
+              <Clock className="mr-2 h-5 w-5 text-blue-500" />
+              Attendance Rate
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[200px]">
-              <div className="space-y-4">
-                {announcements.map((announcement) => (
-                  <div
-                    key={announcement.id}
-                    className="border-b pb-4 last:border-0"
-                  >
-                    <h3 className="font-medium">{announcement.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {announcement.message}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {announcement.date}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
+            <div className="text-3xl font-bold">{attendanceRate}%</div>
           </CardContent>
         </Card>
 
-        {/* Upcoming Meals */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <UtensilsCrossed className="mr-2 h-5 w-5" />
-              Today's Meals
+              <AlertTriangle className="mr-2 h-5 w-5 text-yellow-500" />
+              Disciplinary Points
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[200px]">
-              <div className="space-y-4">
-                {upcomingMeals.map((meal, index) => (
-                  <div key={index} className="border-b pb-4 last:border-0">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-medium">{meal.type}</h3>
-                      <span className="text-sm text-muted-foreground">
-                        {meal.time}
-                      </span>
-                    </div>
-                    <ul className="text-sm text-muted-foreground list-disc pl-4">
-                      {meal.menu.map((item, i) => (
-                        <li key={i}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
+            <div className="text-3xl font-bold">{disciplinaryPoints}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Bell className="mr-2 h-5 w-5 text-purple-500" />
+              Notifications
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{notifications.length}</div>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="flex items-center">
+              <CalendarDays className="mr-2 h-5 w-5" />
+              Upcoming Events
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <Button
-                variant="outline"
-                className="h-24 flex flex-col items-center justify-center"
-              >
-                <CalendarDays className="h-6 w-6 mb-2" />
-                Request Leave
-              </Button>
-              <Button
-                variant="outline"
-                className="h-24 flex flex-col items-center justify-center"
-              >
-                <Home className="h-6 w-6 mb-2" />
-                View Room Details
-              </Button>
-            </div>
+            <ScrollArea className="h-[300px]">
+              <div className="space-y-4">
+                {events.map((event) => (
+                  <div
+                    key={event.id}
+                    className="flex justify-between items-center border-b pb-2 last:border-0"
+                  >
+                    <div>
+                      <p className="font-medium">{event.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {event.date} {event.time}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {event.location}
+                      </p>
+                      {event.mealTimings && event.mealTimings.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {event.mealTimings.map((meal) => (
+                            <span
+                              key={meal}
+                              className={`px-2 py-0.5 rounded-full text-xs ${event.packedMeals?.includes(meal) ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}
+                            >
+                              {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                              {event.packedMeals?.includes(meal) && " (Packed)"}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2 items-end">
+                      <Button
+                        variant={event.registered ? "destructive" : "default"}
+                        size="sm"
+                        onClick={() => {
+                          if (event.registered) {
+                            const confirmed = window.confirm(
+                              "Are you sure you want to cancel your registration?",
+                            );
+                            if (confirmed) {
+                              handleEventCancellation(event.id);
+                            }
+                          } else {
+                            if (
+                              event.mealTimings &&
+                              event.mealTimings.length > 0
+                            ) {
+                              const confirmed = window.confirm(
+                                `This event conflicts with ${event.mealTimings.join(", ")}. Would you like packed meals for these times?`,
+                              );
+                              handleEventRegistration(event.id, confirmed);
+                            } else {
+                              handleEventRegistration(event.id);
+                            }
+                          }
+                        }}
+                      >
+                        {event.registered ? "Cancel" : "Sign Up"}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Bell className="mr-2 h-5 w-5" />
+              Recent Notifications
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[300px]">
+              <div className="space-y-4">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className="flex items-start gap-4 border-b pb-4 last:border-0"
+                  >
+                    <div
+                      className={`p-2 rounded-full ${notification.type === "event" ? "bg-blue-100" : notification.type === "wellbeing" ? "bg-green-100" : "bg-yellow-100"}`}
+                    >
+                      {notification.type === "event" ? (
+                        <CalendarDays className="h-4 w-4 text-blue-500" />
+                      ) : notification.type === "wellbeing" ? (
+                        <Heart className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Bell className="h-4 w-4 text-yellow-500" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{notification.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {notification.message}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {notification.time}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       </div>

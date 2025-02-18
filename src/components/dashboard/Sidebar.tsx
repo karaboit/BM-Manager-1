@@ -50,6 +50,7 @@ const Sidebar = ({
     { id: "leave", label: "Leave Management", icon: CalendarDays },
     { id: "discipline", label: "Discipline", icon: Shield },
     { id: "wellbeing", label: "Wellbeing", icon: Heart },
+    { id: "events", label: "Events", icon: CalendarDays },
     { id: "config", label: "System Config", icon: Settings },
     { id: "audit", label: "Audit Logs", icon: ClipboardList },
     { id: "maintenance", label: "Maintenance", icon: Wrench },
