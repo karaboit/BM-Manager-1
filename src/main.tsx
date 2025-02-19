@@ -3,9 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.tsx";
 import "./index.css";
-import { testConnection } from "@/lib/supabase/client";
-import { createTables } from "@/lib/supabase/createTables";
-import { verifyTables } from "@/lib/supabase/verifyTables";
+import { verifyConnection } from "@/lib/supabase/verify-connection";
 import { TempoDevtools } from "tempo-devtools";
 
 // Initialize Tempo Devtools
@@ -14,7 +12,7 @@ if (import.meta.env.VITE_TEMPO) {
 }
 
 // Initialize Supabase and render app
-testConnection().then((connected) => {
+verifyConnection().then((connected) => {
   if (!connected) {
     console.error("Failed to connect to Supabase");
   } else {

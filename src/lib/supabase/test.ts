@@ -1,47 +1,55 @@
 import { supabase } from "./client";
 
-export async function testDatabaseSetup() {
+async function testDatabase() {
+  console.log("Testing database setup...");
+
   try {
-    // Create a test table
-    const { error: createError } = await supabase.rpc("execute_sql", {
-      sql: `
-        CREATE TABLE IF NOT EXISTS test_table (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          name TEXT NOT NULL,
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        );
-      `,
-    });
+    // Test 1: Check if houses table exists and has data
+    const { data: houses, error: housesError } = await supabase
+      .from("houses")
+      .select("*");
 
-    if (createError) {
-      console.error("Error creating test table:", createError);
-      return false;
-    }
+    console.log("Houses check:", { houses, error: housesError });
 
-    // Insert a test record
-    const { error: insertError } = await supabase
-      .from("test_table")
-      .insert({ name: "test record" });
+    // Test 2: Check if profiles table exists and has data
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("*");
 
-    if (insertError) {
-      console.error("Error inserting test record:", insertError);
-      return false;
-    }
+    console.log("Profiles check:", { profiles, error: profilesError });
 
-    // Read the test record
-    const { data, error: readError } = await supabase
-      .from("test_table")
-      .select();
+    // Test 3: Try to create a new user
+    const testUser = {
+      email: `test${Date.now()}@example.com`,
+      full_name: "Test User",
+      role: "system_administrator",
+    };
 
-    if (readError) {
-      console.error("Error reading test record:", readError);
-      return false;
-    }
+    const { data: newUser, error: createError } = await supabase
+      .from("profiles")
+      .insert(testUser)
+      .select()
+      .single();
 
-    console.log("Test database setup successful:", data);
-    return true;
+    console.log("User creation test:", { newUser, error: createError });
+
+    return {
+      housesOk: !housesError && houses?.length > 0,
+      profilesOk: !profilesError && profiles?.length > 0,
+      userCreateOk: !createError && newUser?.id,
+    };
   } catch (error) {
-    console.error("Test database setup failed:", error);
-    return false;
+    console.error("Error during tests:", error);
+    return {
+      housesOk: false,
+      profilesOk: false,
+      userCreateOk: false,
+      error,
+    };
   }
 }
+
+// Run the tests
+testDatabase().then((results) => {
+  console.log("Database test results:", results);
+});

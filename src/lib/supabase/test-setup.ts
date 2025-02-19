@@ -1,41 +1,71 @@
 import { supabase } from "./client";
 
-export async function testSetup() {
-  try {
-    // Create a test table
-    const { error: createError } = await supabase.rpc("create_test_table", {
-      table_name: "test_table",
-    });
+async function testSetup() {
+  console.log("Starting database tests...");
 
-    if (createError) {
-      console.error("Error creating test table:", createError);
-      return false;
-    }
+  // 1. First check if profiles table exists
+  const { data: tableCheck, error: tableError } = await supabase
+    .from("profiles")
+    .select("id")
+    .limit(1);
 
-    // Insert a test record
-    const { error: insertError } = await supabase
-      .from("test_table")
-      .insert({ name: "test" });
+  console.log("1. Table existence check:", {
+    exists: !tableError?.code,
+    error: tableError,
+  });
 
-    if (insertError) {
-      console.error("Error inserting test record:", insertError);
-      return false;
-    }
+  // 2. If table exists, check its structure
+  if (!tableError) {
+    const { data: columns, error: columnsError } = await supabase.rpc(
+      "exec_sql",
+      {
+        sql_string: `
+          SELECT 
+            column_name, 
+            data_type,
+            column_default,
+            is_nullable
+          FROM 
+            information_schema.columns 
+          WHERE 
+            table_name = 'profiles'
+          ORDER BY 
+            ordinal_position;
+        `,
+      },
+    );
 
-    // Query the test record
-    const { data, error: selectError } = await supabase
-      .from("test_table")
-      .select();
-
-    if (selectError) {
-      console.error("Error querying test table:", selectError);
-      return false;
-    }
-
-    console.log("Test setup successful:", data);
-    return true;
-  } catch (error) {
-    console.error("Test setup failed:", error);
-    return false;
+    console.log("2. Column structure:", { columns, error: columnsError });
   }
+
+  // 3. Try to create a test user
+  const testUser = {
+    email: "test" + Date.now() + "@example.com",
+    full_name: "Test User",
+    role: "system_administrator",
+  };
+
+  const { data: createData, error: createError } = await supabase
+    .from("profiles")
+    .insert(testUser)
+    .select()
+    .single();
+
+  console.log("3. Test user creation:", {
+    success: !!createData,
+    data: createData,
+    error: createError,
+  });
+
+  return {
+    tableExists: !tableError?.code,
+    tableError,
+    createSuccess: !!createData,
+    createError,
+  };
 }
+
+// Run the test
+testSetup().then((result) => {
+  console.log("Test setup complete:", result);
+});

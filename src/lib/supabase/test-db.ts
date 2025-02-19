@@ -1,47 +1,30 @@
 import { supabase } from "./client";
 
-export async function testDatabaseSetup() {
-  try {
-    // Create a test table
-    const { error: createError } = await supabase.rpc("execute_sql", {
-      sql: `
-        CREATE TABLE IF NOT EXISTS test_table (
-          id SERIAL PRIMARY KEY,
-          name TEXT NOT NULL,
-          created_at TIMESTAMPTZ DEFAULT NOW()
-        );
-      `,
-    });
+export async function checkDatabase() {
+  console.log("Checking database...");
 
-    if (createError) {
-      console.error("Error creating test table:", createError);
-      return false;
+  // Check if profiles table exists
+  const { data: tableCheck, error: tableError } = await supabase
+    .from("profiles")
+    .select("id")
+    .limit(1);
+
+  console.log("Table check result:", { tableCheck, tableError });
+
+  // If table doesn't exist (error code 42P01) or there's another error, we'll know
+  if (tableError) {
+    if (tableError.code === "42P01") {
+      console.log("Profiles table does not exist");
+    } else {
+      console.log("Error checking profiles table:", tableError);
     }
-
-    // Insert a test record
-    const { error: insertError } = await supabase
-      .from("test_table")
-      .insert({ name: "test record" });
-
-    if (insertError) {
-      console.error("Error inserting test record:", insertError);
-      return false;
-    }
-
-    // Read the test record
-    const { data, error: readError } = await supabase
-      .from("test_table")
-      .select();
-
-    if (readError) {
-      console.error("Error reading test record:", readError);
-      return false;
-    }
-
-    console.log("Test database setup successful:", data);
-    return true;
-  } catch (error) {
-    console.error("Test database setup failed:", error);
-    return false;
+    return { exists: false, error: tableError };
   }
+
+  return { exists: true, error: null };
 }
+
+// Run the check
+checkDatabase().then((result) => {
+  console.log("Database check complete:", result);
+});

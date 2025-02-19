@@ -1,7 +1,7 @@
--- Enable UUID extension
+-- Step 1: Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create houses table first (since profiles references it)
+-- Step 2: Create houses table first
 CREATE TABLE IF NOT EXISTS houses (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS houses (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Create profiles table
+-- Step 3: Create profiles table
 CREATE TABLE IF NOT EXISTS profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email TEXT UNIQUE NOT NULL,
@@ -20,14 +20,10 @@ CREATE TABLE IF NOT EXISTS profiles (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Insert some initial houses
-INSERT INTO houses (name) VALUES
-    ('East Wing'),
-    ('West Wing'),
-    ('North Wing')
+-- Step 4: Insert test data
+INSERT INTO houses (name) VALUES ('East Wing')
 ON CONFLICT DO NOTHING;
 
--- Insert initial admin user
 INSERT INTO profiles (email, full_name, role)
 VALUES ('admin@example.com', 'Admin User', 'system_administrator')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (email) DO NOTHING;

@@ -20,14 +20,14 @@ CREATE TABLE IF NOT EXISTS profiles (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Insert some initial houses
+-- Insert initial houses if they don't exist
 INSERT INTO houses (name) VALUES
     ('East Wing'),
     ('West Wing'),
     ('North Wing')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (name) DO NOTHING;
 
--- Insert initial admin user
+-- Insert initial admin user if it doesn't exist
 INSERT INTO profiles (email, full_name, role)
 VALUES ('admin@example.com', 'Admin User', 'system_administrator')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (email) DO NOTHING;

@@ -4,7 +4,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Create houses table first (since profiles references it)
 CREATE TABLE IF NOT EXISTS houses (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name TEXT NOT NULL,
+    name TEXT NOT NULL UNIQUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -20,14 +20,14 @@ CREATE TABLE IF NOT EXISTS profiles (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Insert some initial houses
+-- Insert initial houses
 INSERT INTO houses (name) VALUES
     ('East Wing'),
     ('West Wing'),
     ('North Wing')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (name) DO NOTHING;
 
 -- Insert initial admin user
 INSERT INTO profiles (email, full_name, role)
 VALUES ('admin@example.com', 'Admin User', 'system_administrator')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (email) DO NOTHING;

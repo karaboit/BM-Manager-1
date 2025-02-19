@@ -1,26 +1,31 @@
 import { supabase } from "./client";
-
-import { createCoreTables } from "./createTables";
-import { createBoardingTables } from "./createBoardingTables";
+import fs from "fs";
+import path from "path";
 
 export async function setupDatabase() {
   try {
-    // Create core tables
-    const coreSuccess = await createCoreTables();
-    if (!coreSuccess) {
-      throw new Error("Failed to create core tables");
-    }
+    // Read the schema SQL
+    const schema = fs.readFileSync(path.join(__dirname, "schema.sql"), "utf8");
 
-    // Create boarding tables
-    const boardingSuccess = await createBoardingTables();
-    if (!boardingSuccess) {
-      throw new Error("Failed to create boarding tables");
+    // Execute the schema SQL
+    const { error } = await supabase.rpc("exec_sql", {
+      sql_string: schema,
+    });
+
+    if (error) {
+      console.error("Error setting up database:", error);
+      return false;
     }
 
     console.log("Database setup completed successfully");
     return true;
   } catch (error) {
-    console.error("Error setting up database:", error);
+    console.error("Error in database setup:", error);
     return false;
   }
 }
+
+// Run the setup
+setupDatabase().then((success) => {
+  console.log("Database setup:", success ? "SUCCESS" : "FAILED");
+});

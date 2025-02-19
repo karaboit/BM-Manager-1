@@ -1,6 +1,4 @@
--- Medical related tables
-
--- Medical records
+-- Create medical_records table
 CREATE TABLE IF NOT EXISTS medical_records (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   boarder_id UUID NOT NULL REFERENCES profiles(id),
@@ -8,97 +6,142 @@ CREATE TABLE IF NOT EXISTS medical_records (
   chronic_conditions TEXT[] DEFAULT '{}',
   blood_type TEXT,
   emergency_contact TEXT NOT NULL,
-  insurance_info JSONB,
+  notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Clinic visits
+-- Create clinic_visits table
 CREATE TABLE IF NOT EXISTS clinic_visits (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   boarder_id UUID NOT NULL REFERENCES profiles(id),
   visit_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   reason TEXT NOT NULL,
-  symptoms TEXT[],
+  vitals JSONB NOT NULL DEFAULT '{}'::jsonb,
   diagnosis TEXT,
   treatment TEXT,
-  follow_up_date DATE,
+  follow_up_date TIMESTAMPTZ,
   staff_id UUID NOT NULL REFERENCES profiles(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Medications
-CREATE TABLE IF NOT EXISTS medications (
+-- Create medication_schedules table
+CREATE TABLE IF NOT EXISTS medication_schedules (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   boarder_id UUID NOT NULL REFERENCES profiles(id),
-  medication_name TEXT NOT NULL,
+  medicine_name TEXT NOT NULL,
   dosage TEXT NOT NULL,
   frequency TEXT NOT NULL,
   start_date DATE NOT NULL,
   end_date DATE,
-  instructions TEXT,
-  prescribed_by UUID NOT NULL REFERENCES profiles(id),
+  notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Medication logs
+-- Create medication_logs table
 CREATE TABLE IF NOT EXISTS medication_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  medication_id UUID NOT NULL REFERENCES medications(id),
+  schedule_id UUID NOT NULL REFERENCES medication_schedules(id),
   administered_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   administered_by UUID NOT NULL REFERENCES profiles(id),
-  status TEXT NOT NULL CHECK (status IN ('Administered', 'Missed', 'Refused')),
+  status TEXT NOT NULL CHECK (status IN ('taken', 'missed', 'refused')),
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Immunizations
+-- Create immunizations table
 CREATE TABLE IF NOT EXISTS immunizations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   boarder_id UUID NOT NULL REFERENCES profiles(id),
   vaccine_name TEXT NOT NULL,
-  date_administered DATE NOT NULL,
-  administered_by TEXT NOT NULL,
-  next_due_date DATE,
+  dose_number INTEGER NOT NULL DEFAULT 1,
+  administered_date DATE NOT NULL,
+  administered_by UUID NOT NULL REFERENCES profiles(id),
+  next_dose_date DATE,
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Wellbeing surveys
+-- Create wellbeing_surveys table
 CREATE TABLE IF NOT EXISTS wellbeing_surveys (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   boarder_id UUID NOT NULL REFERENCES profiles(id),
-  survey_date DATE NOT NULL DEFAULT CURRENT_DATE,
-  mood_rating INTEGER CHECK (mood_rating BETWEEN 1 AND 5),
-  sleep_hours INTEGER,
-  stress_level INTEGER CHECK (stress_level BETWEEN 1 AND 5),
-  physical_activity INTEGER CHECK (physical_activity BETWEEN 1 AND 5),
-  eating_habits INTEGER CHECK (eating_habits BETWEEN 1 AND 5),
-  social_connection INTEGER CHECK (social_connection BETWEEN 1 AND 5),
-  concerns TEXT,
+  responses JSONB NOT NULL,
+  risk_score INTEGER,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Create triggers for updated_at
-CREATE TRIGGER set_timestamp
-  BEFORE UPDATE ON medical_records
-  FOR EACH ROW
-  EXECUTE FUNCTION trigger_set_timestamp();
+-- Enable Row Level Security
+ALTER TABLE medical_records ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clinic_visits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE medication_schedules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE medication_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE immunizations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE wellbeing_surveys ENABLE ROW LEVEL SECURITY;
 
-CREATE TRIGGER set_timestamp
-  BEFORE UPDATE ON clinic_visits
-  FOR EACH ROW
-  EXECUTE FUNCTION trigger_set_timestamp();
+-- Create RLS policies
+CREATE POLICY "Users can view their own medical records"
+ON medical_records FOR SELECT
+TO PUBLIC
+USING (
+  auth.uid() = boarder_id OR
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+    AND (
+      profiles.role IN ('System Administrator', 'Medical Staff')
+      OR (profiles.role = 'Boarder Parent' AND EXISTS (
+        SELECT 1 FROM parent_student_relationships
+        WHERE parent_id = auth.uid()
+        AND student_id = medical_records.boarder_id
+      ))
+    )
+  )
+);
 
-CREATE TRIGGER set_timestamp
-  BEFORE UPDATE ON medications
-  FOR EACH ROW
-  EXECUTE FUNCTION trigger_set_timestamp();
+CREATE POLICY "Medical staff can manage medical records"
+ON medical_records
+FOR ALL
+TO PUBLIC
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+    AND profiles.role IN ('System Administrator', 'Medical Staff')
+  )
+);
 
-CREATE TRIGGER set_timestamp
-  BEFORE UPDATE ON immunizations
-  FOR EACH ROW
-  EXECUTE FUNCTION trigger_set_timestamp();
+-- Similar policies for other medical tables
+CREATE POLICY "Users can view their own clinic visits"
+ON clinic_visits FOR SELECT
+TO PUBLIC
+USING (
+  auth.uid() = boarder_id OR
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+    AND (
+      profiles.role IN ('System Administrator', 'Medical Staff')
+      OR (profiles.role = 'Boarder Parent' AND EXISTS (
+        SELECT 1 FROM parent_student_relationships
+        WHERE parent_id = auth.uid()
+        AND student_id = clinic_visits.boarder_id
+      ))
+    )
+  )
+);
+
+CREATE POLICY "Medical staff can manage clinic visits"
+ON clinic_visits
+FOR ALL
+TO PUBLIC
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+    AND profiles.role IN ('System Administrator', 'Medical Staff')
+  )
+);
