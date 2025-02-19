@@ -4,51 +4,36 @@ import { useDashboardStore } from "@/lib/store";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { setCurrentUser } = useDashboardStore();
+  const { setCurrentUser, setAvailablePanels } = useDashboardStore();
 
-  const handleLogin = () => {
-    // For demo purposes, log in as System Administrator
-    // For demo purposes, log in as System Administrator
-    const demoUsers = [
-      {
-        id: "1",
-        name: "Admin User",
-        email: "admin@example.com",
-        role: "System Administrator",
-        status: "Active",
-      },
-      {
-        id: "2",
-        name: "John Smith",
-        email: "john@example.com",
-        role: "Boarder",
-        status: "Active",
-      },
-      {
-        id: "3",
-        name: "Dr. Sarah Wilson",
-        email: "sarah@example.com",
-        role: "Medical Staff",
-        status: "Active",
-      },
-      {
-        id: "4",
-        name: "Mr. James Brown",
-        email: "james@example.com",
-        role: "House Master",
-        status: "Active",
-      },
-      {
-        id: "5",
-        name: "Mrs. Smith",
-        email: "parent@example.com",
-        role: "Boarder Parent",
-        status: "Active",
-      },
+  const handleLogin = async () => {
+    const adminUser = {
+      id: "1",
+      name: "Admin User",
+      email: "admin@example.com",
+      role: "System Administrator",
+      status: "Active",
+    };
+
+    const adminPanels = [
+      "dashboard",
+      "users",
+      "rooms",
+      "medical",
+      "kitchen",
+      "attendance",
+      "leave",
+      "discipline",
+      "wellbeing",
+      "events",
+      "config",
+      "audit",
+      "maintenance",
+      "messaging",
     ];
 
-    // For demo, let's use the System Administrator
-    setCurrentUser(demoUsers[0]);
+    setCurrentUser(adminUser);
+    setAvailablePanels(adminPanels);
     navigate("/");
   };
 

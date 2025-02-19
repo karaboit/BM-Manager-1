@@ -22,17 +22,7 @@ import { Plus } from "lucide-react";
 import { Immunization } from "@/types";
 import { useDashboardStore } from "@/lib/store";
 
-const defaultImmunizations: Immunization[] = [
-  {
-    immunization_id: "1",
-    boarder_id: "B001",
-    vaccine_name: "COVID-19 Vaccine",
-    immunization_date: "2024-01-15",
-    notes: "First dose",
-    created_at: "2024-01-15T10:00:00Z",
-    updated_at: "2024-01-15T10:00:00Z",
-  },
-];
+const defaultImmunizations: Immunization[] = [];
 
 const ImmunizationsTab = () => {
   const [isNewImmunizationOpen, setIsNewImmunizationOpen] = useState(false);

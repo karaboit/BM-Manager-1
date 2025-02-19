@@ -10,21 +10,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WellbeingSurvey } from "@/types";
 
-const defaultSurveys: WellbeingSurvey[] = [
-  {
-    survey_id: "1",
-    boarder_id: "B001",
-    created_at: "2024-03-21T10:00:00Z",
-    responses: {
-      mood: 4,
-      sleep: 7,
-      stress: false,
-      loneliness: 2,
-      physical_discomfort: false,
-    },
-    risk_score: 2,
-  },
-];
+const defaultSurveys: WellbeingSurvey[] = [];
 
 const calculateRiskLevel = (score: number) => {
   if (score <= 2) return "Low";

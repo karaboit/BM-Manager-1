@@ -23,30 +23,8 @@ import { Plus } from "lucide-react";
 import { MedicationSchedule, MedicationLog } from "@/types";
 import { useDashboardStore } from "@/lib/store";
 
-const defaultSchedules: MedicationSchedule[] = [
-  {
-    med_schedule_id: "1",
-    boarder_id: "B001",
-    medicine_name: "Paracetamol",
-    dosage: "500mg",
-    frequency: "Twice daily",
-    start_date: "2024-03-21",
-    created_at: "2024-03-21T10:00:00Z",
-    updated_at: "2024-03-21T10:00:00Z",
-  },
-];
-
-const defaultLogs: MedicationLog[] = [
-  {
-    log_id: "1",
-    med_schedule_id: "1",
-    dose_time: "2024-03-21T08:00:00Z",
-    status: "taken",
-    staff_id: "S001",
-    created_at: "2024-03-21T08:00:00Z",
-    updated_at: "2024-03-21T08:00:00Z",
-  },
-];
+const defaultSchedules: MedicationSchedule[] = [];
+const defaultLogs: MedicationLog[] = [];
 
 const MedicationsTab = () => {
   const [isNewScheduleOpen, setIsNewScheduleOpen] = useState(false);

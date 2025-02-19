@@ -73,29 +73,7 @@ const CORRECTIVE_MEASURES = {
   ],
 };
 
-const defaultRecords: DisciplinaryRecord[] = [
-  {
-    id: "1",
-    boarderId: "B001",
-    date: "2024-03-21",
-    offense: "Late return from outing",
-    category: "Minor",
-    punishment: "Extra study hour",
-    status: "Pending",
-    reportedBy: "John Smith",
-  },
-  {
-    id: "2",
-    boarderId: "B002",
-    date: "2024-03-20",
-    offense: "Unauthorized absence",
-    category: "Major",
-    punishment: "Weekend detention",
-    status: "Approved",
-    reportedBy: "Jane Doe",
-    approvedBy: "House Master",
-  },
-];
+const defaultRecords: DisciplinaryRecord[] = [];
 
 const DisciplinePanel = () => {
   const [isNewRecordOpen, setIsNewRecordOpen] = useState(false);

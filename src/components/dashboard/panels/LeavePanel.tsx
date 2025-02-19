@@ -17,35 +17,7 @@ interface LeavePanelProps {
   leaveRequests?: Leave[];
 }
 
-const defaultLeaveRequests: Leave[] = [
-  {
-    id: "1",
-    boarderId: "B001",
-    startDate: "2024-03-22",
-    endDate: "2024-03-24",
-    reason: "Family event",
-    type: "Family",
-    status: "Pending Parent",
-  },
-  {
-    id: "2",
-    boarderId: "B002",
-    startDate: "2024-03-25",
-    endDate: "2024-03-26",
-    reason: "Medical appointment",
-    type: "Medical",
-    status: "Approved",
-  },
-  {
-    id: "3",
-    boarderId: "B003",
-    startDate: "2024-03-27",
-    endDate: "2024-03-28",
-    reason: "Personal matter",
-    type: "Personal",
-    status: "Pending House Master",
-  },
-];
+const defaultLeaveRequests: Leave[] = [];
 
 const LeavePanel = () => {
   const { currentUser, selectedChildId } = useDashboardStore();

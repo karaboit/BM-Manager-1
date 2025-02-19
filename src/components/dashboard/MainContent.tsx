@@ -1,4 +1,7 @@
 import React, { useState, lazy, Suspense } from "react";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { FadeIn } from "@/components/ui/motion";
 
 const SystemDashboard = lazy(() => import("./panels/SystemDashboard"));
 import { useDashboardStore } from "@/lib/store";
@@ -7,7 +10,7 @@ import UserManagementPanel from "./panels/UserManagementPanel";
 import ConfigPanel from "./panels/ConfigPanel";
 import AuditLogPanel from "./panels/AuditLogPanel";
 import MaintenancePanel from "./panels/MaintenancePanel";
-import AnnouncementPanel from "./panels/AnnouncementPanel";
+import MessagingPanel from "./panels/MessagingPanel";
 import MedicalPanel from "./panels/MedicalPanel";
 import RoomPanel from "./panels/RoomPanel";
 import AttendancePanel from "./panels/AttendancePanel";
@@ -24,7 +27,7 @@ type ActivePanel =
   | "config"
   | "audit"
   | "maintenance"
-  | "announcements"
+  | "messaging"
   | "medical"
   | "rooms"
   | "kitchen"
@@ -58,14 +61,7 @@ const MainContent: React.FC<MainContentProps> = ({
             isParentView={currentUser?.role === "Boarder Parent"}
             boarder={{
               name: currentUser?.name || "Unknown User",
-              room:
-                selectedChildId === "B001"
-                  ? "Room 101"
-                  : selectedChildId === "B002"
-                    ? "Room 102"
-                    : selectedChildId === "B003"
-                      ? "Room 103"
-                      : "Room 101",
+              room: "", // Will be fetched from DB
               house: "East Wing",
             }}
           />
@@ -93,6 +89,7 @@ const MainContent: React.FC<MainContentProps> = ({
     if (currentUser?.role === "Kitchen Staff" && currentPanel === "kitchen") {
       return <KitchenPanel showDashboard={false} />;
     }
+
     switch (currentPanel) {
       case "dashboard":
         return <BoarderDashboard />;
@@ -104,8 +101,8 @@ const MainContent: React.FC<MainContentProps> = ({
         return <AuditLogPanel />;
       case "maintenance":
         return <MaintenancePanel />;
-      case "announcements":
-        return <AnnouncementPanel />;
+      case "messaging":
+        return <MessagingPanel />;
       case "medical":
         // Only show medical info for medical staff, boarders (their own), and parents (their child)
         // Show medical info for medical staff, boarders (their own), parents (their children), and house management
@@ -152,7 +149,20 @@ const MainContent: React.FC<MainContentProps> = ({
   };
 
   return (
-    <div className="flex-1 p-4 bg-gray-100 overflow-auto">{renderPanel()}</div>
+    <div className="flex-1 p-4 md:p-6 space-y-4 md:space-y-6 bg-gray-100 overflow-auto">
+      <div className="hidden md:block">
+        <Breadcrumb
+          items={[
+            {
+              label: activePanel.charAt(0).toUpperCase() + activePanel.slice(1),
+            },
+          ]}
+        />
+      </div>
+      <FadeIn>
+        <div className="space-y-4 md:space-y-6">{renderPanel()}</div>
+      </FadeIn>
+    </div>
   );
 };
 

@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Plus, Search, Users } from "lucide-react";
+import { Plus, Send, Search, Users, UserPlus } from "lucide-react";
 import { useDashboardStore } from "@/lib/store";
+import { useChatStore } from "@/lib/store/chatStore";
+import { ChatList } from "./chat/ChatList";
+import { ChatMessage } from "./chat/ChatMessage";
 import {
   Dialog,
   DialogContent,
@@ -20,39 +24,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface Chat {
-  id: string;
-  type: "group" | "direct";
-  name: string;
-  role?: string;
-  avatar?: string;
-  lastMessage?: string;
-  timestamp?: string;
-  unread?: number;
-  allowedRoles?: string[];
-}
-
-interface Message {
-  id: string;
-  sender: {
-    name: string;
-    role: string;
-    avatar?: string;
-  };
-  content: string;
-  timestamp: string;
-}
-
-const defaultChats: Chat[] = [
+const defaultGroups = [
   {
     id: "announcements",
-    type: "group",
+    type: "group" as const,
     name: "General Announcements",
-    role: "System",
+    participants: [],
+    unreadCount: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Announcements",
-    lastMessage: "Good morning everyone!",
-    timestamp: "08:00 AM",
-    unread: 2,
     allowedRoles: [
       "System Administrator",
       "House Master",
@@ -61,151 +42,141 @@ const defaultChats: Chat[] = [
   },
   {
     id: "medical",
-    type: "group",
+    type: "group" as const,
     name: "Medical Updates",
-    role: "Medical Staff",
+    participants: [],
+    unreadCount: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Medical",
-    lastMessage: "Flu vaccination schedule posted",
-    timestamp: "09:15 AM",
     allowedRoles: ["Medical Staff", "System Administrator", "House Master"],
   },
   {
     id: "kitchen",
-    type: "group",
+    type: "group" as const,
     name: "Kitchen Updates",
-    role: "Kitchen Staff",
+    participants: [],
+    unreadCount: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kitchen",
-    lastMessage: "Today's menu update",
-    timestamp: "02:30 PM",
     allowedRoles: ["Kitchen Staff", "System Administrator"],
   },
 ];
 
-const defaultMessages: Record<string, Message[]> = {
-  announcements: [
-    {
-      id: "1",
-      sender: {
-        name: "House Master",
-        role: "House Master",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=HouseMaster",
-      },
-      content:
-        "Good morning everyone! Remember to complete your room inspection before breakfast.",
-      timestamp: "08:00 AM",
-    },
-  ],
-  medical: [
-    {
-      id: "2",
-      sender: {
-        name: "Medical Staff",
-        role: "Medical Staff",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Medical",
-      },
-      content: "Flu vaccination schedule has been posted on the medical board.",
-      timestamp: "09:15 AM",
-    },
-  ],
-  kitchen: [
-    {
-      id: "3",
-      sender: {
-        name: "Kitchen Staff",
-        role: "Kitchen Staff",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kitchen",
-      },
-      content:
-        "Today's dinner menu: Grilled chicken, roasted vegetables, and rice.",
-      timestamp: "02:30 PM",
-    },
-  ],
-};
-
 const AnnouncementPanel = () => {
-  const [chats, setChats] = useState<Chat[]>(defaultChats);
-  const [messages, setMessages] =
-    useState<Record<string, Message[]>>(defaultMessages);
-  const [selectedChat, setSelectedChat] = useState<string>("announcements");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { currentUser } = useDashboardStore();
+  const {
+    chats,
+    messages,
+    selectedChat,
+    setSelectedChat,
+    sendMessage,
+    createChat,
+    markAsRead,
+  } = useChatStore();
+
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [newChatName, setNewChatName] = useState("");
-  const [searchResults, setSearchResults] = useState<
-    { name: string; role: string }[]
-  >([]);
-  const { currentUser } = useDashboardStore();
+  const [isNewChatOpen, setIsNewChatOpen] = useState(false);
+  const [messageType, setMessageType] = useState<"group" | "direct">("group");
+  const [userSearchTerm, setUserSearchTerm] = useState("");
 
-  const canSendToGroup = (chatId: string) => {
-    const chat = chats.find((c) => c.id === chatId);
-    return chat?.allowedRoles?.includes(currentUser?.role || "");
-  };
+  const demoUsers = [
+    {
+      id: "1",
+      name: "Admin User",
+      email: "admin@example.com",
+      role: "System Administrator",
+      status: "Active",
+    },
+    {
+      id: "2",
+      name: "Director Smith",
+      email: "director@example.com",
+      role: "Director",
+      status: "Active",
+    },
+    {
+      id: "3",
+      name: "Mr. James Brown",
+      email: "james@example.com",
+      role: "House Master",
+      status: "Active",
+    },
+    {
+      id: "4",
+      name: "Ms. Jane Wilson",
+      email: "jane@example.com",
+      role: "Deputy House Master",
+      status: "Active",
+    },
+    {
+      id: "5",
+      name: "Support Staff",
+      email: "support@example.com",
+      role: "Support Staff",
+      status: "Active",
+    },
+    {
+      id: "6",
+      name: "Head Prefect",
+      email: "prefect@example.com",
+      role: "Prefect",
+      status: "Active",
+    },
+    {
+      id: "7",
+      name: "Dr. Sarah Wilson",
+      email: "sarah@example.com",
+      role: "Medical Staff",
+      status: "Active",
+    },
+    {
+      id: "8",
+      name: "Chef Johnson",
+      email: "chef@example.com",
+      role: "Kitchen Staff",
+      status: "Active",
+    },
+    {
+      id: "9",
+      name: "Mrs. Smith",
+      email: "parent@example.com",
+      role: "Boarder Parent",
+      status: "Active",
+    },
+    {
+      id: "10",
+      name: "John Smith",
+      email: "john@example.com",
+      role: "Boarder",
+      status: "Active",
+    },
+  ];
 
-  const handleSearch = (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
+  // Initialize default groups if not exists
+  useEffect(() => {
+    if (chats.length === 0) {
+      defaultGroups.forEach((group) => createChat(group));
     }
+  }, []);
 
-    // Simulated user search - in real app, this would be an API call
-    const results = [
-      { name: "John Smith", role: "House Master" },
-      { name: "Jane Doe", role: "Medical Staff" },
-      { name: "Bob Wilson", role: "Kitchen Staff" },
-    ].filter(
-      (user) =>
-        user.name.toLowerCase().includes(query.toLowerCase()) ||
-        user.role.toLowerCase().includes(query.toLowerCase()),
-    );
+  useEffect(() => {
+    if (selectedChat) {
+      markAsRead(selectedChat);
+      scrollToBottom();
+    }
+  }, [selectedChat, messages[selectedChat]]);
 
-    setSearchResults(results);
-  };
-
-  const handleCreateDirectMessage = (selectedUser?: {
-    name: string;
-    role: string;
-  }) => {
-    if (!selectedUser && !newChatName.trim()) return;
-
-    const chatName = selectedUser?.name || newChatName;
-    const newChat: Chat = {
-      id: Date.now().toString(),
-      type: "direct",
-      name: chatName,
-      role: selectedUser?.role,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${chatName}`,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    setChats((prev) => [...prev, newChat]);
-    setMessages((prev) => ({ ...prev, [newChat.id]: [] }));
-    setSelectedChat(newChat.id);
-    setNewChatName("");
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleSendMessage = () => {
-    if (!newMessage.trim() || !currentUser) return;
-
-    const message: Message = {
-      id: Date.now().toString(),
-      sender: {
-        name: currentUser.name,
-        role: currentUser.role,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.name}`,
-      },
-      content: newMessage,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    setMessages((prev) => ({
-      ...prev,
-      [selectedChat]: [...(prev[selectedChat] || []), message],
-    }));
+    if (!selectedChat || !newMessage.trim() || !currentUser) return;
+    sendMessage(selectedChat, newMessage);
     setNewMessage("");
   };
 
@@ -213,11 +184,18 @@ const AnnouncementPanel = () => {
     chat.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  // All users can create messages
-  const canCreateMessage = true;
+  const isDirectMessage = (chatId: string) => {
+    const chat = chats.find((c) => c.id === chatId);
+    return chat?.type === "direct";
+  };
+
+  const canSendToGroup = (chatId: string) => {
+    const chat = chats.find((c) => c.id === chatId);
+    return chat?.allowedRoles?.includes(currentUser?.role || "");
+  };
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] bg-background">
+    <div className="flex h-[calc(100vh-8rem)] bg-background overflow-hidden">
       <div className="w-80 border-r flex flex-col">
         <div className="p-4 border-b space-y-4">
           <div className="relative">
@@ -229,229 +207,198 @@ const AnnouncementPanel = () => {
               className="pl-8"
             />
           </div>
-          {canCreateMessage && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full">
-                  <Users className="mr-2 h-4 w-4" />
-                  New Message
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>New Message</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <div className="space-y-4">
+          <Dialog open={isNewChatOpen} onOpenChange={setIsNewChatOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full">
+                <Users className="mr-2 h-4 w-4" />
+                New Message
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>New Message</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setMessageType("group")}
+                    >
+                      <Users className="mr-2 h-4 w-4" />
+                      Group
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setMessageType("direct")}
+                    >
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Direct Message
+                    </Button>
+                  </div>
+
+                  {messageType === "group" ? (
                     <Select
                       onValueChange={(value) => {
-                        const group = defaultChats.find((c) => c.id === value);
+                        const group = defaultGroups.find((g) => g.id === value);
                         if (group) {
-                          handleCreateDirectMessage({
-                            name: group.name,
-                            role: group.role || "",
-                          });
+                          createChat(group);
+                          setSelectedChat(group.id);
+                          setIsNewChatOpen(false);
                         }
                       }}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a group" />
+                        <SelectValue placeholder="Select group" />
                       </SelectTrigger>
                       <SelectContent>
-                        {defaultChats
-                          .filter(
-                            (chat) =>
-                              chat.type === "group" &&
-                              chat.allowedRoles?.includes(
-                                currentUser?.role || "",
-                              ),
+                        {defaultGroups
+                          .filter((group) =>
+                            group.allowedRoles?.includes(
+                              currentUser?.role || "",
+                            ),
                           )
-                          .map((chat) => (
-                            <SelectItem key={chat.id} value={chat.id}>
-                              {chat.name}
+                          .map((group) => (
+                            <SelectItem key={group.id} value={group.id}>
+                              {group.name}
                             </SelectItem>
                           ))}
                       </SelectContent>
                     </Select>
-                    <div className="relative">
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Or search for a user:
-                      </p>
+                  ) : (
+                    <div className="space-y-4">
                       <Input
                         placeholder="Search users..."
-                        value={newChatName}
-                        onChange={(e) => {
-                          setNewChatName(e.target.value);
-                          handleSearch(e.target.value);
-                        }}
+                        value={userSearchTerm}
+                        onChange={(e) => setUserSearchTerm(e.target.value)}
                       />
-                    </div>
-                  </div>
-                  {searchResults.length > 0 && (
-                    <div className="border rounded-md max-h-48 overflow-y-auto">
-                      {searchResults.map((user, index) => (
-                        <div
-                          key={index}
-                          className="p-2 hover:bg-accent cursor-pointer flex items-center gap-2"
-                          onClick={() => {
-                            handleCreateDirectMessage(user);
-                            setSearchResults([]);
-                            setNewChatName("");
-                          }}
-                        >
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
-                            />
-                            <AvatarFallback>{user.name[0]}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{user.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {user.role}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
+                      <ScrollArea className="h-[200px] border rounded-md p-2">
+                        {demoUsers
+                          .filter(
+                            (user) =>
+                              user.id !== currentUser?.id &&
+                              (user.name
+                                .toLowerCase()
+                                .includes(userSearchTerm.toLowerCase()) ||
+                                user.role
+                                  .toLowerCase()
+                                  .includes(userSearchTerm.toLowerCase())),
+                          )
+                          .map((user) => (
+                            <div
+                              key={user.id}
+                              className="flex items-center gap-2 p-2 hover:bg-accent rounded-md cursor-pointer"
+                              onClick={() => {
+                                const existingChat = chats.find(
+                                  (chat) =>
+                                    chat.type === "direct" &&
+                                    chat.participants.includes(user.id) &&
+                                    chat.participants.includes(
+                                      currentUser?.id || "",
+                                    ),
+                                );
+
+                                if (existingChat) {
+                                  setSelectedChat(existingChat.id);
+                                } else {
+                                  const chatId = createChat({
+                                    type: "direct",
+                                    name: user.name,
+                                    participants: [
+                                      currentUser?.id || "",
+                                      user.id,
+                                    ],
+                                    unreadCount: 0,
+                                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`,
+                                  });
+                                  setSelectedChat(chatId);
+                                }
+                                setIsNewChatOpen(false);
+                              }}
+                            >
+                              <Avatar>
+                                <AvatarImage
+                                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`}
+                                />
+                                <AvatarFallback>{user.name[0]}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-medium">{user.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {user.role}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                      </ScrollArea>
                     </div>
                   )}
-                  <Button
-                    onClick={() => handleCreateDirectMessage()}
-                    className="w-full"
-                  >
-                    Create Chat
-                  </Button>
                 </div>
-              </DialogContent>
-            </Dialog>
-          )}
-        </div>
-        <ScrollArea className="flex-1">
-          {filteredChats.map((chat) => (
-            <div
-              key={chat.id}
-              className={`p-4 cursor-pointer hover:bg-accent ${selectedChat === chat.id ? "bg-accent" : ""}`}
-              onClick={() => setSelectedChat(chat.id)}
-            >
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src={chat.avatar} />
-                  <AvatarFallback>{chat.name[0]}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start">
-                    <p className="font-medium truncate">{chat.name}</p>
-                    <span className="text-xs text-muted-foreground">
-                      {chat.timestamp}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {chat.lastMessage}
-                  </p>
-                </div>
-                {chat.unread && (
-                  <span className="bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {chat.unread}
-                  </span>
-                )}
               </div>
-            </div>
-          ))}
-        </ScrollArea>
+            </DialogContent>
+          </Dialog>
+        </div>
+        <ChatList
+          chats={filteredChats}
+          selectedChatId={selectedChat}
+          onChatSelect={setSelectedChat}
+        />
       </div>
 
       <div className="flex-1 flex flex-col">
-        {selectedChat && (
+        {selectedChat ? (
           <>
             <div className="p-4 border-b">
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage
-                    src={chats.find((c) => c.id === selectedChat)?.avatar}
-                  />
-                  <AvatarFallback>
-                    {chats.find((c) => c.id === selectedChat)?.name[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium">
-                    {chats.find((c) => c.id === selectedChat)?.name}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {chats.find((c) => c.id === selectedChat)?.role}
-                  </p>
-                </div>
-              </div>
+              <h2 className="text-lg font-semibold">
+                {chats.find((c) => c.id === selectedChat)?.name}
+              </h2>
             </div>
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-4">
-                {messages[selectedChat]?.map((message) => (
-                  <div
+                {(messages[selectedChat] || []).map((message, index, arr) => (
+                  <ChatMessage
                     key={message.id}
-                    className={`flex gap-3 ${message.sender.name === currentUser?.name ? "justify-end" : "justify-start"}`}
-                  >
-                    {message.sender.name !== currentUser?.name && (
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={message.sender.avatar} />
-                        <AvatarFallback>
-                          {message.sender.name[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div
-                      className={`max-w-[70%] rounded-lg p-3 ${message.sender.name === currentUser?.name ? "bg-primary text-primary-foreground" : "bg-muted"}`}
-                    >
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-sm">
-                            {message.sender.name}
-                          </span>
-                          <span className="text-xs opacity-70">
-                            {message.sender.role}
-                          </span>
-                        </div>
-                        <p className="mt-1">{message.content}</p>
-                        <span className="text-xs opacity-70 mt-1 text-right">
-                          {message.timestamp}
-                        </span>
-                      </div>
-                    </div>
-                    {message.sender.name === currentUser?.name && (
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={message.sender.avatar} />
-                        <AvatarFallback>
-                          {message.sender.name[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
+                    message={message}
+                    showAvatar={
+                      index === arr.length - 1 ||
+                      arr[index + 1]?.senderId !== message.senderId
+                    }
+                  />
                 ))}
+                <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
-            {(canSendToGroup(selectedChat) ||
-              chats.find((c) => c.id === selectedChat)?.type === "direct") && (
-              <div className="p-4 border-t">
-                <div className="flex gap-2">
-                  <Button variant="outline" size="icon">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                  <Input
-                    placeholder="Type a message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                    className="flex-1"
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!newMessage.trim()}
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
+            <div className="p-4 border-t">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Type a message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                  disabled={
+                    !isDirectMessage(selectedChat) &&
+                    !canSendToGroup(selectedChat)
+                  }
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={
+                    !newMessage.trim() ||
+                    (!isDirectMessage(selectedChat) &&
+                      !canSendToGroup(selectedChat))
+                  }
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
               </div>
-            )}
+            </div>
           </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-muted-foreground">
+            Select a chat to start messaging
+          </div>
         )}
       </div>
     </div>

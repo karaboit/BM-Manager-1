@@ -35,8 +35,8 @@ interface SidebarProps {
 const Sidebar = ({
   activePage = "dashboard",
   onNavigate = () => {},
-  userName = "Admin User",
-  userRole = "System Administrator",
+  userName,
+  userRole,
 }: SidebarProps) => {
   const { availablePanels } = useDashboardStore();
 
@@ -54,7 +54,7 @@ const Sidebar = ({
     { id: "config", label: "System Config", icon: Settings },
     { id: "audit", label: "Audit Logs", icon: ClipboardList },
     { id: "maintenance", label: "Maintenance", icon: Wrench },
-    { id: "announcements", label: "Announcements", icon: Bell },
+    { id: "messaging", label: "Messaging", icon: Bell },
   ];
 
   return (

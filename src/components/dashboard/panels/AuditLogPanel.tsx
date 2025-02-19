@@ -39,32 +39,7 @@ interface AuditLogPanelProps {
   logs?: LogEntry[];
 }
 
-const defaultLogs: LogEntry[] = [
-  {
-    id: "1",
-    timestamp: "2024-03-20 10:30:00",
-    eventType: "User Activity",
-    description: "User login successful",
-    user: "john.doe@example.com",
-    severity: "info",
-  },
-  {
-    id: "2",
-    timestamp: "2024-03-20 11:15:00",
-    eventType: "System Change",
-    description: "System settings updated",
-    user: "admin@example.com",
-    severity: "warning",
-  },
-  {
-    id: "3",
-    timestamp: "2024-03-20 12:00:00",
-    eventType: "Security Event",
-    description: "Failed login attempt",
-    user: "unknown",
-    severity: "error",
-  },
-];
+const defaultLogs: LogEntry[] = [];
 
 const AuditLogPanel = ({ logs = defaultLogs }: AuditLogPanelProps) => {
   const [date, setDate] = useState<Date>();

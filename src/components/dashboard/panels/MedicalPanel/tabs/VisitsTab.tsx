@@ -22,23 +22,7 @@ import { Plus } from "lucide-react";
 import { ClinicVisit } from "@/types";
 import { useDashboardStore } from "@/lib/store";
 
-const defaultVisits: ClinicVisit[] = [
-  {
-    visit_id: "1",
-    boarder_id: "B001",
-    visit_date: "2024-03-21T10:00:00Z",
-    reason: "Fever and headache",
-    vitals: {
-      temperature: 38.5,
-      blood_pressure: "120/80",
-      pulse: 80,
-    },
-    treatment: "Prescribed paracetamol",
-    staff_id: "S001",
-    created_at: "2024-03-21T10:00:00Z",
-    updated_at: "2024-03-21T10:00:00Z",
-  },
-];
+const defaultVisits: ClinicVisit[] = [];
 
 const VisitsTab = () => {
   const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);

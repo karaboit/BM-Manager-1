@@ -6,11 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { CheckCircle2, Clock, XCircle, Search, Users } from "lucide-react";
 import { useDashboardStore } from "@/lib/store";
 
-const defaultBoarders = Array.from({ length: 100 }, (_, i) => ({
-  id: `B${String(i + 1).padStart(3, "0")}`,
-  name: `Boarder ${i + 1}`,
-  room: `${Math.floor(i / 4) + 101}`,
-}));
+const defaultBoarders: { id: string; name: string; room: string }[] = [];
 
 type RollCallType = "Morning" | "Afternoon" | "Evening";
 type AttendanceStatus = "Present" | "Late" | "Absent" | "Unmarked";

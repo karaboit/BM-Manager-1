@@ -21,17 +21,7 @@ import { Plus } from "lucide-react";
 import { MedicalInfo } from "@/types";
 import { useDashboardStore } from "@/lib/store";
 
-const defaultRecords: MedicalInfo[] = [
-  {
-    medical_info_id: "1",
-    boarder_id: "B001",
-    allergies: ["Peanuts", "Penicillin"],
-    chronic_conditions: ["Asthma"],
-    emergency_contact: "John Doe (Father) - +1234567890",
-    created_at: "2024-03-21T10:00:00Z",
-    updated_at: "2024-03-21T10:00:00Z",
-  },
-];
+const defaultRecords: MedicalInfo[] = [];
 
 const RecordsTab = () => {
   const [isNewRecordOpen, setIsNewRecordOpen] = useState(false);

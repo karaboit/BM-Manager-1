@@ -23,9 +23,26 @@ dist-ssr
 *.sln
 *.sw?
 
-!node_modules/.vite
-
+# Tempo specific
 **/tempobook/dynamic/
 **/tempobook/storyboards/
 
-core
+# Build output
+dist
+build
+.next
+out
+
+# Environment variables
+.env*.local
+
+# Cache
+.cache
+.parcel-cache
+
+# Coverage
+coverage
+
+# Misc
+.DS_Store
+Thumbs.db

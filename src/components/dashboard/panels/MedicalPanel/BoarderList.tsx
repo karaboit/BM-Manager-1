@@ -18,26 +18,7 @@ interface BoarderListProps {
   onBoarderSelect: (boarderId: string) => void;
 }
 
-const defaultBoarders: Boarder[] = [
-  {
-    id: "B001",
-    name: "John Smith",
-    room: "Room 101",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
-  },
-  {
-    id: "B002",
-    name: "Jane Doe",
-    room: "Room 102",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane",
-  },
-  {
-    id: "B003",
-    name: "Bob Wilson",
-    room: "Room 103",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob",
-  },
-];
+const defaultBoarders: Boarder[] = [];
 
 const BoarderList = ({
   boarders = defaultBoarders,
