@@ -43,10 +43,9 @@ export async function getUsers() {
 }
 
 export async function createUser(
-  user: Omit<User, "id" | "created_at" | "updated_at">,
+  user: Omit<User, "id" | "created_at" | "updated_at">
 ) {
   try {
-    // Try database first, fall back to mock in development
     const { data: roleData, error: roleError } = await supabase
       .from("roles")
       .select("id")
@@ -54,24 +53,6 @@ export async function createUser(
       .single();
 
     if (roleError) {
-      if (import.meta.env.DEV) {
-        console.warn(
-          "Using mock data in development due to DB error:",
-          roleError,
-        );
-        return {
-          id: crypto.randomUUID(),
-          email: user.email,
-          full_name: user.full_name,
-          role: {
-            id: crypto.randomUUID(),
-            name: user.role_key,
-            role_key: user.role_key,
-          },
-          status: "active",
-          created_at: new Date().toISOString(),
-        };
-      }
       throw roleError;
     }
 
@@ -80,7 +61,6 @@ export async function createUser(
     }
 
     const userId = crypto.randomUUID();
-    // Insert into users table with role relationship
     const { data, error } = await supabase
       .from("users")
       .insert({
@@ -92,12 +72,7 @@ export async function createUser(
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .select(
-        `
-        *,
-        role:roles(*)
-      `,
-      )
+      .select(`*, role:roles(*)`)
       .single();
 
     if (error) {
