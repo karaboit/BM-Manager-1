@@ -1,23 +1,120 @@
 import { supabase } from "../supabase/client";
-import { User, UserCreate, UserUpdate } from "@/types/user";
+import { User } from "../types";
 
 export async function getUsers() {
-  const { data: users, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: false });
+  try {
+    // First verify the connection
+    const { data: testData, error: testError } = await supabase
+      .from("roles")
+      .select("*");
 
-  if (error) {
-    console.error("Error fetching users:", error);
-    throw error;
+    if (testError) {
+      console.error("Connection test failed:", testError);
+      throw new Error("Failed to connect to database");
+    }
+
+    // Now fetch the actual data
+    const { data, error } = await supabase
+      .from("users")
+      .select(
+        `
+        id,
+        email,
+        full_name,
+        role_id,
+        status,
+        created_at,
+        role:roles(id, name, role_key, description)
+      `,
+      )
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching users:", error);
+      throw new Error(error.message);
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error("Failed to fetch users:", err);
+    throw err;
   }
-
-  return users || [];
 }
 
-export async function updateUser(userId: string, updates: UserUpdate) {
+export async function createUser(
+  user: Omit<User, "id" | "created_at" | "updated_at">,
+) {
+  try {
+    // Try database first, fall back to mock in development
+    const { data: roleData, error: roleError } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("role_key", user.role_key)
+      .single();
+
+    if (roleError) {
+      if (import.meta.env.DEV) {
+        console.warn(
+          "Using mock data in development due to DB error:",
+          roleError,
+        );
+        return {
+          id: crypto.randomUUID(),
+          email: user.email,
+          full_name: user.full_name,
+          role: {
+            id: crypto.randomUUID(),
+            name: user.role_key,
+            role_key: user.role_key,
+          },
+          status: "active",
+          created_at: new Date().toISOString(),
+        };
+      }
+      throw roleError;
+    }
+
+    if (!roleData?.id) {
+      throw new Error(`Role not found for key: ${user.role_key}`);
+    }
+
+    const userId = crypto.randomUUID();
+    // Insert into users table with role relationship
+    const { data, error } = await supabase
+      .from("users")
+      .insert({
+        id: userId,
+        email: user.email,
+        full_name: user.full_name,
+        role_id: roleData.id,
+        status: "active",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select(
+        `
+        *,
+        role:roles(*)
+      `,
+      )
+      .single();
+
+    if (error) {
+      console.error("Error creating user:", error);
+      throw error;
+    }
+
+    return data;
+  } catch (err) {
+    console.error("Failed to create user:", err);
+    throw err;
+  }
+}
+
+export async function updateUser(userId: string, updates: Partial<User>) {
   const { data, error } = await supabase
-    .from("profiles")
+    .from("users")
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
@@ -26,88 +123,12 @@ export async function updateUser(userId: string, updates: UserUpdate) {
     .select()
     .single();
 
-  if (error) {
-    console.error("Error updating user:", error);
-    throw error;
-  }
-
+  if (error) throw error;
   return data;
 }
 
 export async function deleteUser(userId: string) {
-  const { error } = await supabase.from("profiles").delete().eq("id", userId);
+  const { error } = await supabase.from("users").delete().eq("id", userId);
 
-  if (error) {
-    console.error("Error deleting user:", error);
-    throw error;
-  }
-}
-
-export async function createUser(user: UserCreate) {
-  try {
-    // First check if user exists
-    const { data: existing } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("email", user.email)
-      .maybeSingle();
-
-    if (existing) {
-      throw new Error("A user with this email already exists");
-    }
-
-    // If house_id is provided, verify it exists
-    if (user.house_id) {
-      const { data: house } = await supabase
-        .from("houses")
-        .select("id")
-        .eq("id", user.house_id)
-        .single();
-
-      if (!house) {
-        throw new Error("Invalid house selected");
-      }
-    }
-
-    // Get valid roles from the roles table
-    const { data: validRoles, error: rolesError } = await supabase
-      .from("roles")
-      .select("name");
-
-    if (rolesError) throw rolesError;
-
-    if (!validRoles?.some((r) => r.name === user.role)) {
-      throw new Error("Invalid role selected");
-    }
-
-    // Create the user with explicit id generation
-    const { data, error } = await supabase
-      .from("profiles")
-      .insert({
-        id: crypto.randomUUID(),
-        email: user.email.toLowerCase().trim(),
-        full_name: user.full_name.trim(),
-        role: user.role,
-        house_id: user.house_id,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      if (error.code === "23505") {
-        // unique_violation
-        throw new Error("A user with this email already exists");
-      }
-      if (error.code === "23514") {
-        // check_violation
-        throw new Error("Invalid role specified");
-      }
-      throw error;
-    }
-
-    return data;
-  } catch (error: any) {
-    console.error("Error creating user:", error);
-    throw error;
-  }
+  if (error) throw error;
 }

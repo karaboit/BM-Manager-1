@@ -13,12 +13,31 @@ interface Boarder {
 }
 
 interface BoarderListProps {
-  boarders: Boarder[];
-  selectedBoarderId?: string;
+  boarders?: Boarder[];
+  selectedBoarderId?: string | null;
   onBoarderSelect: (boarderId: string) => void;
 }
 
-const defaultBoarders: Boarder[] = [];
+const defaultBoarders: Boarder[] = [
+  {
+    id: "B001",
+    name: "John Smith",
+    room: "101",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=B001",
+  },
+  {
+    id: "B002",
+    name: "Jane Doe",
+    room: "102",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=B002",
+  },
+  {
+    id: "B003",
+    name: "Bob Wilson",
+    room: "103",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=B003",
+  },
+];
 
 const BoarderList = ({
   boarders = defaultBoarders,

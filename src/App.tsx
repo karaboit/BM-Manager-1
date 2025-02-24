@@ -1,12 +1,16 @@
 import { Suspense } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useRoutes, Navigate } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import routes from "tempo-routes";
+
+// Pages
 import Home from "@/components/home";
 import LoginPage from "@/components/auth/LoginPage";
 import Unauthorized from "@/pages/Unauthorized";
 import { ProtectedRoute } from "@/lib/auth/ProtectedRoute";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Toaster } from "@/components/ui/toaster";
-import routes from "tempo-routes";
+
+import { UserSwitcher } from "@/components/UserSwitcher";
 
 function App() {
   return (
@@ -20,6 +24,9 @@ function App() {
       >
         <div className="min-h-screen bg-background">
           <Routes>
+            {/* Tempo routes first */}
+            {import.meta.env.VITE_TEMPO && <Route path="/tempobook/*" />}
+
             <Route path="/login" element={<LoginPage />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route
@@ -30,12 +37,11 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            {/* Add this before the catchall route */}
-            {import.meta.env.VITE_TEMPO && (
-              <Route path="/tempobook/*" element={<Home />} />
-            )}
-            <Route path="*" element={<Home />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
+
+          {/* User Switcher for testing */}
+          <UserSwitcher />
         </div>
       </Suspense>
       <Toaster />

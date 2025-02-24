@@ -1,43 +1,39 @@
-export interface BoardingHouse {
-  house_id: string;
-  house_name: string;
+export interface House {
+  id: string;
+  name: string;
   capacity: number;
   created_at: string;
   updated_at: string;
+  status?: string;
 }
 
 export interface Room {
-  room_id: string;
+  id: string;
+  name: string;
   house_id: string;
-  room_number: string;
   capacity: number;
   created_at: string;
   updated_at: string;
+  status?: string;
 }
 
 export interface Bed {
-  bed_id: string;
+  id: string;
   room_id: string;
-  bed_label: string;
+  student_id?: string;
   status: "available" | "occupied" | "maintenance";
   created_at: string;
   updated_at: string;
+  assignments: BedAssignment[];
 }
 
 export interface BedAssignment {
-  assignment_id: string;
+  id: string;
   bed_id: string;
-  boarder_id: string;
+  student_id: string;
   start_date: string;
-  end_date?: string;
+  end_date: string | null;
   status: "active" | "ended";
+  notes?: string;
   created_at: string;
-  updated_at: string;
-}
-
-export interface RoomAllocation {
-  house: BoardingHouse;
-  rooms: Room[];
-  beds: Bed[];
-  assignments: BedAssignment[];
 }

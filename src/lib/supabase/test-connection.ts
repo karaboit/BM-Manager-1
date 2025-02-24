@@ -2,17 +2,20 @@ import { supabase } from "./client";
 
 export async function testConnection() {
   try {
-    const { data, error } = await supabase.from("profiles").select("count");
+    console.log("Testing Supabase connection...");
+    console.log("URL:", supabase.getUrl());
+
+    const { data, error } = await supabase.from("houses").select("count");
 
     if (error) {
-      console.error("Supabase connection failed:", error);
+      console.error("Connection test failed:", error);
       return false;
     }
 
-    console.log("Supabase connection successful");
+    console.log("Connection successful:", data);
     return true;
-  } catch (error) {
-    console.error("Supabase connection failed:", error);
+  } catch (err) {
+    console.error("Connection test failed:", err);
     return false;
   }
 }

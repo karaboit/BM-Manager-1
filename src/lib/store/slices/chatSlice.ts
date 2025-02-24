@@ -6,7 +6,6 @@ export interface Message {
   senderId: string;
   content: string;
   timestamp: string;
-  attachments?: string[];
   replyTo?: string;
 }
 
@@ -20,7 +19,6 @@ export interface Chat {
   createdAt: string;
   updatedAt: string;
   avatar?: string;
-  description?: string;
   allowedRoles?: string[];
 }
 
@@ -35,7 +33,9 @@ export interface ChatState {
 export interface ChatActions {
   setSelectedChat: (chatId: string | null) => void;
   sendMessage: (chatId: string, content: string, replyTo?: string) => void;
-  createChat: (chat: Omit<Chat, "id" | "createdAt" | "updatedAt">) => string;
+  createChat: (
+    chatData: Omit<Chat, "id" | "createdAt" | "updatedAt">,
+  ) => string;
   markAsRead: (chatId: string) => void;
   deleteMessage: (chatId: string, messageId: string) => void;
   editMessage: (chatId: string, messageId: string, content: string) => void;
@@ -53,13 +53,10 @@ export const createChatSlice: StateCreator<ChatSlice> = (set, get) => ({
   setSelectedChat: (chatId) => set({ selectedChat: chatId }),
 
   sendMessage: (chatId, content, replyTo) => {
-    const currentUser = useDashboardStore.getState().currentUser;
-    if (!currentUser) return;
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
+    const message = {
+      id: crypto.randomUUID(),
       chatId,
-      senderId: currentUser.id,
+      senderId: get().currentUser?.id || "",
       content,
       timestamp: new Date().toISOString(),
       replyTo,
@@ -68,14 +65,14 @@ export const createChatSlice: StateCreator<ChatSlice> = (set, get) => ({
     set((state) => ({
       messages: {
         ...state.messages,
-        [chatId]: [...(state.messages[chatId] || []), newMessage],
+        [chatId]: [...(state.messages[chatId] || []), message],
       },
       chats: state.chats.map((chat) =>
         chat.id === chatId
           ? {
               ...chat,
-              lastMessage: newMessage,
-              updatedAt: newMessage.timestamp,
+              lastMessage: message,
+              updatedAt: message.timestamp,
             }
           : chat,
       ),
@@ -83,20 +80,25 @@ export const createChatSlice: StateCreator<ChatSlice> = (set, get) => ({
   },
 
   createChat: (chatData) => {
-    const newChat: Chat = {
-      ...chatData,
-      id: Date.now().toString(),
+    const chatId = crypto.randomUUID();
+    const chat: Chat = {
+      id: chatId,
+      type: chatData.type,
+      name: chatData.name,
+      participants: chatData.participants,
+      unreadCount: 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      unreadCount: 0,
+      avatar: chatData.avatar,
+      allowedRoles: chatData.allowedRoles,
     };
 
     set((state) => ({
-      chats: [...state.chats, newChat],
-      messages: { ...state.messages, [newChat.id]: [] },
+      chats: [...state.chats, chat],
+      messages: { ...state.messages, [chatId]: [] },
     }));
 
-    return newChat.id;
+    return chatId;
   },
 
   markAsRead: (chatId) => {

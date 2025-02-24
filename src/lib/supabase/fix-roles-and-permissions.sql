@@ -1,119 +1,104 @@
--- Drop existing tables if they exist
-DROP TABLE IF EXISTS role_permissions CASCADE;
-DROP TABLE IF EXISTS permissions CASCADE;
-DROP TABLE IF EXISTS roles CASCADE;
+-- First backup existing roles
+CREATE TABLE IF NOT EXISTS roles_backup AS SELECT * FROM roles;
 
--- Create roles table
-CREATE TABLE roles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT UNIQUE NOT NULL,
-  description TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- Create a mapping table for the roles we want to keep
+CREATE TEMP TABLE role_mapping AS
+SELECT DISTINCT ON (CASE
+    WHEN role_key IN ('medical_staff', 'medical') THEN 'medical'
+    WHEN role_key IN ('kitchen_staff', 'kitchen') THEN 'kitchen'
+    WHEN role_key IN ('boarder_parent', 'parent') THEN 'parent'
+    ELSE role_key
+END)
+    id,
+    CASE
+        WHEN role_key IN ('medical_staff', 'medical') THEN 'medical'
+        WHEN role_key IN ('kitchen_staff', 'kitchen') THEN 'kitchen'
+        WHEN role_key IN ('boarder_parent', 'parent') THEN 'parent'
+        ELSE role_key
+    END as new_role_key,
+    CASE
+        WHEN role_key IN ('medical_staff', 'medical') THEN 'Medical Staff'
+        WHEN role_key IN ('kitchen_staff', 'kitchen') THEN 'Kitchen Staff'
+        WHEN role_key IN ('boarder_parent', 'parent') THEN 'Boarder Parent'
+        WHEN role_key = 'system_admin' THEN 'System Administrator'
+        WHEN role_key = 'director' THEN 'Director'
+        WHEN role_key = 'house_master' THEN 'House Master'
+        WHEN role_key = 'deputy_master' THEN 'Deputy House Master'
+        WHEN role_key = 'boarder' THEN 'Boarder'
+        WHEN role_key = 'support_staff' THEN 'Support Staff'
+        ELSE name
+    END as new_name,
+    CASE
+        WHEN role_key IN ('medical_staff', 'medical') THEN 'Medical center access'
+        WHEN role_key IN ('kitchen_staff', 'kitchen') THEN 'Kitchen management access'
+        WHEN role_key IN ('boarder_parent', 'parent') THEN 'Parent access'
+        WHEN role_key = 'system_admin' THEN 'Full system access'
+        WHEN role_key = 'director' THEN 'School management access'
+        WHEN role_key = 'house_master' THEN 'House management access'
+        WHEN role_key = 'deputy_master' THEN 'Assistant house management access'
+        WHEN role_key = 'boarder' THEN 'Student access'
+        WHEN role_key = 'support_staff' THEN 'Support staff access'
+        ELSE description
+    END as new_description
+FROM roles
+ORDER BY 
+    CASE
+        WHEN role_key IN ('medical_staff', 'medical') THEN 'medical'
+        WHEN role_key IN ('kitchen_staff', 'kitchen') THEN 'kitchen'
+        WHEN role_key IN ('boarder_parent', 'parent') THEN 'parent'
+        ELSE role_key
+    END,
+    created_at;
+
+-- Update user references to point to the canonical role IDs
+UPDATE users
+SET role_id = rm.id
+FROM roles r
+JOIN role_mapping rm ON 
+    CASE
+        WHEN r.role_key IN ('medical_staff', 'medical') THEN 'medical'
+        WHEN r.role_key IN ('kitchen_staff', 'kitchen') THEN 'kitchen'
+        WHEN r.role_key IN ('boarder_parent', 'parent') THEN 'parent'
+        ELSE r.role_key
+    END = rm.new_role_key
+WHERE users.role_id = r.id AND r.id != rm.id;
+
+-- Same for user_profiles
+UPDATE user_profiles
+SET role_id = rm.id
+FROM roles r
+JOIN role_mapping rm ON 
+    CASE
+        WHEN r.role_key IN ('medical_staff', 'medical') THEN 'medical'
+        WHEN r.role_key IN ('kitchen_staff', 'kitchen') THEN 'kitchen'
+        WHEN r.role_key IN ('boarder_parent', 'parent') THEN 'parent'
+        ELSE r.role_key
+    END = rm.new_role_key
+WHERE user_profiles.role_id = r.id AND r.id != rm.id;
+
+-- Delete roles that aren't in our mapping and aren't referenced
+DELETE FROM roles r
+WHERE NOT EXISTS (
+    SELECT 1 FROM role_mapping rm WHERE r.id = rm.id
+) AND NOT EXISTS (
+    SELECT 1 FROM users WHERE role_id = r.id
+    UNION ALL
+    SELECT 1 FROM user_profiles WHERE role_id = r.id
 );
 
--- Create permissions table
-CREATE TABLE permissions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT UNIQUE NOT NULL,
-  description TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+-- Update remaining roles with new values
+UPDATE roles r
+SET 
+    role_key = rm.new_role_key,
+    name = rm.new_name,
+    description = rm.new_description
+FROM role_mapping rm
+WHERE r.id = rm.id;
 
--- Create role_permissions table
-CREATE TABLE role_permissions (
-  role_id UUID REFERENCES roles(id) ON DELETE CASCADE,
-  permission_id UUID REFERENCES permissions(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  PRIMARY KEY (role_id, permission_id)
-);
+-- Drop temporary tables
+DROP TABLE role_mapping;
 
--- Enable RLS
-ALTER TABLE roles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE permissions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE role_permissions ENABLE ROW LEVEL SECURITY;
-
--- Create RLS policies
-CREATE POLICY "Roles are viewable by authenticated users"
-ON roles FOR SELECT
-TO authenticated
-USING (true);
-
-CREATE POLICY "Only system administrators can modify roles"
-ON roles
-FOR ALL
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM profiles
-    WHERE profiles.id = auth.uid()
-    AND profiles.role = 'System Administrator'
-  )
-);
-
-CREATE POLICY "Permissions are viewable by authenticated users"
-ON permissions FOR SELECT
-TO authenticated
-USING (true);
-
-CREATE POLICY "Only system administrators can modify permissions"
-ON permissions
-FOR ALL
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM profiles
-    WHERE profiles.id = auth.uid()
-    AND profiles.role = 'System Administrator'
-  )
-);
-
-CREATE POLICY "Role permissions are viewable by authenticated users"
-ON role_permissions FOR SELECT
-TO authenticated
-USING (true);
-
-CREATE POLICY "Only system administrators can modify role permissions"
-ON role_permissions
-FOR ALL
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM profiles
-    WHERE profiles.id = auth.uid()
-    AND profiles.role = 'System Administrator'
-  )
-);
-
--- Insert default permissions
-INSERT INTO permissions (name, description) VALUES
-('manage_users', 'Can create, update, and delete users'),
-('manage_roles', 'Can create, update, and delete roles'),
-('manage_houses', 'Can create, update, and delete houses'),
-('manage_rooms', 'Can create, update, and delete rooms'),
-('manage_beds', 'Can create, update, and delete beds'),
-('manage_medical', 'Can access and manage medical records'),
-('manage_kitchen', 'Can access and manage kitchen operations'),
-('manage_attendance', 'Can manage attendance records'),
-('manage_discipline', 'Can manage disciplinary records'),
-('manage_leave', 'Can manage leave requests'),
-('manage_events', 'Can create and manage events'),
-('manage_maintenance', 'Can manage maintenance requests'),
-('view_reports', 'Can view system reports'),
-('manage_system', 'Can manage system settings')
-ON CONFLICT (name) DO NOTHING;
-
--- Insert default roles
-INSERT INTO roles (name, description) VALUES
-('System Administrator', 'Full system access'),
-('Director', 'School management access'),
-('House Master', 'House management access'),
-('Deputy House Master', 'Assistant house management access'),
-('Support Staff', 'Basic staff access'),
-('Prefect', 'Boarder leader access'),
-('Medical Staff', 'Medical center access'),
-('Kitchen Staff', 'Kitchen management access'),
-('Boarder Parent', 'Parent access'),
-('Boarder', 'Boarder access')
-ON CONFLICT (name) DO NOTHING;
+-- Verify the results
+SELECT id, name, role_key, description 
+FROM roles 
+ORDER BY name;

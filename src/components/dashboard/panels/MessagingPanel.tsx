@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, Send, Search, Users, UserPlus } from "lucide-react";
 import { useDashboardStore } from "@/lib/store";
-import { useChatStore } from "@/lib/store/chatStore";
 import { ChatList } from "./chat/ChatList";
 import { ChatMessage } from "./chat/ChatMessage";
 import {
@@ -34,11 +33,7 @@ const defaultGroups = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Announcements",
-    allowedRoles: [
-      "System Administrator",
-      "House Master",
-      "Deputy House Master",
-    ],
+    allowedRoles: ["system_administrator", "house_master", "deputy_master"],
   },
   {
     id: "medical",
@@ -49,7 +44,7 @@ const defaultGroups = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Medical",
-    allowedRoles: ["Medical Staff", "System Administrator", "House Master"],
+    allowedRoles: ["medical", "system_administrator", "house_master"],
   },
   {
     id: "kitchen",
@@ -60,22 +55,15 @@ const defaultGroups = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kitchen",
-    allowedRoles: ["Kitchen Staff", "System Administrator"],
+    allowedRoles: ["kitchen", "system_administrator"],
   },
 ];
 
 const MessagingPanel = () => {
   const { currentUser } = useDashboardStore();
-  const {
-    chats,
-    messages,
-    selectedChat,
-    setSelectedChat,
-    sendMessage,
-    createChat,
-    markAsRead,
-  } = useChatStore();
-
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [chats, setChats] = useState(defaultGroups);
+  const [messages, setMessages] = useState<Record<string, any[]>>({});
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
@@ -85,21 +73,43 @@ const MessagingPanel = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     if (selectedChat) {
-      markAsRead(selectedChat);
       scrollToBottom();
     }
   }, [selectedChat, messages[selectedChat]]);
 
   const handleSendMessage = () => {
     if (!selectedChat || !newMessage.trim() || !currentUser) return;
-    sendMessage(selectedChat, newMessage);
+
+    const message = {
+      id: crypto.randomUUID(),
+      chatId: selectedChat,
+      senderId: currentUser.id,
+      content: newMessage,
+      timestamp: new Date().toISOString(),
+    };
+
+    setMessages((prev) => ({
+      ...prev,
+      [selectedChat]: [...(prev[selectedChat] || []), message],
+    }));
+
+    setChats((prev) =>
+      prev.map((chat) =>
+        chat.id === selectedChat
+          ? {
+              ...chat,
+              lastMessage: message,
+              updatedAt: message.timestamp,
+            }
+          : chat,
+      ),
+    );
+
     setNewMessage("");
     scrollToBottom();
   };
@@ -119,13 +129,13 @@ const MessagingPanel = () => {
   };
 
   return (
-    <div className="flex h-full bg-background">
+    <div className="flex h-[calc(100vh-8rem)] bg-background overflow-hidden">
       <div className="w-80 border-r flex flex-col">
         <div className="p-4 border-b space-y-4">
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search messages..."
+              placeholder="Search chats..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8"
@@ -134,7 +144,7 @@ const MessagingPanel = () => {
           <Dialog open={isNewChatOpen} onOpenChange={setIsNewChatOpen}>
             <DialogTrigger asChild>
               <Button className="w-full">
-                <Plus className="mr-2 h-4 w-4" />
+                <Users className="mr-2 h-4 w-4" />
                 New Message
               </Button>
             </DialogTrigger>
@@ -168,7 +178,7 @@ const MessagingPanel = () => {
                       onValueChange={(value) => {
                         const group = defaultGroups.find((g) => g.id === value);
                         if (group) {
-                          createChat(group);
+                          setChats((prev) => [...prev, group]);
                           setSelectedChat(group.id);
                           setIsNewChatOpen(false);
                         }
@@ -227,17 +237,21 @@ const MessagingPanel = () => {
                                 if (existingChat) {
                                   setSelectedChat(existingChat.id);
                                 } else {
-                                  const chatId = createChat({
-                                    type: "direct",
+                                  const newChat = {
+                                    id: crypto.randomUUID(),
+                                    type: "direct" as const,
                                     name: user.name,
                                     participants: [
                                       currentUser?.id || "",
                                       user.id,
                                     ],
                                     unreadCount: 0,
+                                    createdAt: new Date().toISOString(),
+                                    updatedAt: new Date().toISOString(),
                                     avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`,
-                                  });
-                                  setSelectedChat(chatId);
+                                  };
+                                  setChats((prev) => [...prev, newChat]);
+                                  setSelectedChat(newChat.id);
                                 }
                                 setIsNewChatOpen(false);
                               }}

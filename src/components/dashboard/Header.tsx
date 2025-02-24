@@ -9,15 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Bell,
-  Settings,
-  LogOut,
-  User,
-  ChevronDown,
-  UserCog,
-} from "lucide-react";
-import { useDashboardStore } from "@/lib/store";
+import { Bell, Settings, LogOut, User, ChevronDown } from "lucide-react";
 import { KeyboardShortcuts } from "@/components/ui/keyboard-shortcuts";
 
 interface HeaderProps {
@@ -38,7 +30,6 @@ const Header = ({
   userEmail,
   userAvatar,
   notifications = [],
-
   onLogout = () => {},
   onSettingsClick = () => {},
 }: HeaderProps) => {
@@ -80,7 +71,7 @@ const Header = ({
             <Button variant="ghost" className="flex items-center gap-2">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={userAvatar} alt={userName} />
-                <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
+                <AvatarFallback>{userName?.charAt(0)}</AvatarFallback>
               </Avatar>
               <span className="hidden md:inline-block">{userName}</span>
               <ChevronDown className="h-4 w-4" />
@@ -100,136 +91,6 @@ const Header = ({
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>Switch User</DropdownMenuLabel>
-            {[
-              {
-                id: "1",
-                name: "Admin User",
-                email: "admin@example.com",
-                role: "System Administrator",
-                status: "Active",
-              },
-              {
-                id: "2",
-                name: "Director Smith",
-                email: "director@example.com",
-                role: "Director",
-                status: "Active",
-              },
-              {
-                id: "3",
-                name: "Dr. Wilson",
-                email: "medical@example.com",
-                role: "Medical Staff",
-                status: "Active",
-              },
-              {
-                id: "4",
-                name: "Chef Johnson",
-                email: "kitchen@example.com",
-                role: "Kitchen Staff",
-                status: "Active",
-              },
-              {
-                id: "5",
-                name: "Mr. Brown",
-                email: "housemaster@example.com",
-                role: "House Master",
-                status: "Active",
-              },
-              {
-                id: "6",
-                name: "John Student",
-                email: "student@example.com",
-                role: "Boarder",
-                status: "Active",
-              },
-              {
-                id: "7",
-                name: "Mrs. Smith",
-                email: "parent@example.com",
-                role: "Boarder Parent",
-                status: "Active",
-              },
-            ].map((user) => (
-              <DropdownMenuItem
-                key={user.id}
-                onClick={() => {
-                  const store = useDashboardStore.getState();
-                  store.setCurrentUser(user);
-
-                  // Set available panels based on role
-                  const rolePanels = {
-                    "System Administrator": [
-                      "dashboard",
-                      "users",
-                      "rooms",
-                      "medical",
-                      "kitchen",
-                      "attendance",
-                      "leave",
-                      "discipline",
-                      "wellbeing",
-                      "events",
-                      "config",
-                      "audit",
-                      "maintenance",
-                      "messaging",
-                    ],
-                    Director: [
-                      "dashboard",
-                      "users",
-                      "rooms",
-                      "medical",
-                      "kitchen",
-                      "attendance",
-                      "leave",
-                      "discipline",
-                      "wellbeing",
-                      "events",
-                      "maintenance",
-                      "messaging",
-                    ],
-                    "Medical Staff": ["dashboard", "medical", "messaging"],
-                    "Kitchen Staff": ["dashboard", "kitchen", "messaging"],
-                    "House Master": [
-                      "dashboard",
-                      "rooms",
-                      "attendance",
-                      "leave",
-                      "discipline",
-                      "wellbeing",
-                      "messaging",
-                    ],
-                    Boarder: [
-                      "dashboard",
-                      "medical",
-                      "leave",
-                      "wellbeing",
-                      "messaging",
-                    ],
-                    "Boarder Parent": [
-                      "dashboard",
-                      "medical",
-                      "leave",
-                      "wellbeing",
-                      "messaging",
-                    ],
-                  };
-
-                  store.setAvailablePanels(rolePanels[user.role] || []);
-                }}
-              >
-                <UserCog className="mr-2 h-4 w-4" />
-                <div className="flex flex-col">
-                  <span>{user.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {user.role}
-                  </span>
-                </div>
-              </DropdownMenuItem>
-            ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onLogout} className="text-red-600">
               <LogOut className="mr-2 h-4 w-4" />

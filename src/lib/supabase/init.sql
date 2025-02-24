@@ -1,33 +1,48 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create houses table first (since profiles references it)
-CREATE TABLE IF NOT EXISTS houses (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name TEXT NOT NULL UNIQUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- Create roles table first
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
+
+CREATE TABLE roles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  role_key TEXT UNIQUE NOT NULL,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Create profiles table
-CREATE TABLE IF NOT EXISTS profiles (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email TEXT UNIQUE NOT NULL,
-    full_name TEXT,
-    role TEXT NOT NULL CHECK (role IN ('system_administrator', 'director', 'house_master', 'deputy_house_master', 'support_staff', 'prefect', 'medical_staff', 'kitchen_staff', 'boarder_parent', 'boarder')),
-    house_id UUID REFERENCES houses(id),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- Insert default roles
+INSERT INTO roles (name, role_key, description) VALUES
+('System Administrator', 'system_admin', 'Full system access'),
+('Director', 'director', 'School management access'),
+('House Master', 'house_master', 'House management access'),
+('Deputy House Master', 'deputy_master', 'Assistant house management access'),
+('Medical Staff', 'medical', 'Medical center access'),
+('Kitchen Staff', 'kitchen', 'Kitchen management access'),
+('Boarder Parent', 'parent', 'Parent access'),
+('Boarder', 'boarder', 'Student access'),
+('Support Staff', 'support_staff', 'Basic staff access');
+
+-- Create users table
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email TEXT UNIQUE NOT NULL,
+  full_name TEXT NOT NULL,
+  role_id UUID REFERENCES roles(id),
+  status TEXT DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Insert initial houses
-INSERT INTO houses (name) VALUES
-    ('East Wing'),
-    ('West Wing'),
-    ('North Wing')
-ON CONFLICT (name) DO NOTHING;
-
--- Insert initial admin user
-INSERT INTO profiles (email, full_name, role)
-VALUES ('admin@example.com', 'Admin User', 'system_administrator')
-ON CONFLICT (email) DO NOTHING;
+-- Create test user
+INSERT INTO users (email, full_name, role_id, status)
+SELECT 
+  'admin@example.com',
+  'Admin User',
+  roles.id,
+  'active'
+FROM roles 
+WHERE role_key = 'system_admin';

@@ -1,29 +1,45 @@
--- Step 1: Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- Step 2: Create houses table first
-CREATE TABLE IF NOT EXISTS houses (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- Create roles table if it doesn't exist
+CREATE TABLE IF NOT EXISTS roles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  role_key TEXT NOT NULL UNIQUE,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Step 3: Create profiles table
-CREATE TABLE IF NOT EXISTS profiles (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email TEXT UNIQUE NOT NULL,
-    full_name TEXT,
-    role TEXT NOT NULL CHECK (role IN ('system_administrator', 'director', 'house_master', 'deputy_house_master', 'support_staff', 'prefect', 'medical_staff', 'kitchen_staff', 'boarder_parent', 'boarder')),
-    house_id UUID REFERENCES houses(id),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- Create users table if it doesn't exist
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email TEXT UNIQUE NOT NULL,
+  full_name TEXT NOT NULL,
+  role_id UUID REFERENCES roles(id),
+  status TEXT DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Step 4: Insert test data
-INSERT INTO houses (name) VALUES ('East Wing')
-ON CONFLICT DO NOTHING;
+-- Insert default roles if they don't exist
+INSERT INTO roles (name, role_key, description)
+VALUES
+  ('System Administrator', 'system_administrator', 'Full system access'),
+  ('Director', 'director', 'School management access'),
+  ('House Master', 'house_master', 'House management access'),
+  ('Deputy House Master', 'deputy_master', 'Assistant house management access'),
+  ('Medical Staff', 'medical', 'Medical center access'),
+  ('Kitchen Staff', 'kitchen', 'Kitchen management access'),
+  ('Boarder Parent', 'parent', 'Parent access'),
+  ('Boarder', 'boarder', 'Student access'),
+  ('Support Staff', 'support_staff', 'Basic staff access')
+ON CONFLICT (role_key) DO NOTHING;
 
-INSERT INTO profiles (email, full_name, role)
-VALUES ('admin@example.com', 'Admin User', 'system_administrator')
-ON CONFLICT (email) DO NOTHING;
+-- Insert a test admin user if no users exist
+INSERT INTO users (email, full_name, role_id)
+SELECT 
+  'admin@example.com',
+  'Admin User',
+  r.id
+FROM roles r
+WHERE r.role_key = 'system_administrator'
+AND NOT EXISTS (SELECT 1 FROM users)
+LIMIT 1;

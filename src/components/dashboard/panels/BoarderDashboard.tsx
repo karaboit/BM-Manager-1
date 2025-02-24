@@ -12,6 +12,8 @@ import {
   Heart,
   AlertTriangle,
 } from "lucide-react";
+import { LeaveRequestCard } from "./BoarderDashboard/LeaveRequestCard";
+import { MentorGroupCard } from "./BoarderDashboard/MentorGroupCard";
 
 interface BoarderDashboardProps {
   boarder?: {
@@ -169,121 +171,8 @@ const BoarderDashboard = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <CalendarDays className="mr-2 h-5 w-5" />
-              Upcoming Events
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-4">
-                {events.map((event) => (
-                  <div
-                    key={event.id}
-                    className="flex justify-between items-center border-b pb-2 last:border-0"
-                  >
-                    <div>
-                      <p className="font-medium">{event.title}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {event.date} {event.time}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {event.location}
-                      </p>
-                      {event.mealTimings && event.mealTimings.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {event.mealTimings.map((meal) => (
-                            <span
-                              key={meal}
-                              className={`px-2 py-0.5 rounded-full text-xs ${event.packedMeals?.includes(meal) ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}
-                            >
-                              {meal.charAt(0).toUpperCase() + meal.slice(1)}
-                              {event.packedMeals?.includes(meal) && " (Packed)"}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-2 items-end">
-                      <Button
-                        variant={event.registered ? "destructive" : "default"}
-                        size="sm"
-                        onClick={() => {
-                          if (event.registered) {
-                            const confirmed = window.confirm(
-                              "Are you sure you want to cancel your registration?",
-                            );
-                            if (confirmed) {
-                              handleEventCancellation(event.id);
-                            }
-                          } else {
-                            if (
-                              event.mealTimings &&
-                              event.mealTimings.length > 0
-                            ) {
-                              const confirmed = window.confirm(
-                                `This event conflicts with ${event.mealTimings.join(", ")}. Would you like packed meals for these times?`,
-                              );
-                              handleEventRegistration(event.id, confirmed);
-                            } else {
-                              handleEventRegistration(event.id);
-                            }
-                          }
-                        }}
-                      >
-                        {event.registered ? "Cancel" : "Sign Up"}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Bell className="mr-2 h-5 w-5" />
-              Recent Notifications
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-4">
-                {notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className="flex items-start gap-4 border-b pb-4 last:border-0"
-                  >
-                    <div
-                      className={`p-2 rounded-full ${notification.type === "event" ? "bg-blue-100" : notification.type === "wellbeing" ? "bg-green-100" : "bg-yellow-100"}`}
-                    >
-                      {notification.type === "event" ? (
-                        <CalendarDays className="h-4 w-4 text-blue-500" />
-                      ) : notification.type === "wellbeing" ? (
-                        <Heart className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <Bell className="h-4 w-4 text-yellow-500" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">{notification.title}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {notification.time}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+        <LeaveRequestCard />
+        <MentorGroupCard />
       </div>
     </div>
   );

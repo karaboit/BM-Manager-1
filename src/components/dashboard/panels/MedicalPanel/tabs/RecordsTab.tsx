@@ -21,14 +21,37 @@ import { Plus } from "lucide-react";
 import { MedicalInfo } from "@/types";
 import { useDashboardStore } from "@/lib/store";
 
-const defaultRecords: MedicalInfo[] = [];
+const defaultRecords: MedicalInfo[] = [
+  {
+    medical_info_id: "1",
+    boarder_id: "B001",
+    allergies: ["Peanuts", "Penicillin"],
+    chronic_conditions: ["Asthma"],
+    emergency_contact: "John Smith Sr. (Father) - +1234567890",
+    blood_type: "A+",
+    notes: "Regular inhaler use required",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    medical_info_id: "2",
+    boarder_id: "B002",
+    allergies: ["Shellfish"],
+    chronic_conditions: [],
+    emergency_contact: "Jane Doe Sr. (Mother) - +0987654321",
+    blood_type: "O-",
+    notes: "No significant medical history",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
 
-const RecordsTab = () => {
+const RecordsTab = ({ boarderId }: { boarderId: string }) => {
   const [isNewRecordOpen, setIsNewRecordOpen] = useState(false);
   const { currentUser } = useDashboardStore();
-  const canEdit = currentUser?.role === "Medical Staff";
+  const canEdit = currentUser?.role === "medical";
   const [newRecord, setNewRecord] = useState({
-    boarder_id: "",
+    boarder_id: boarderId,
     allergies: [],
     chronic_conditions: [],
     emergency_contact: "",
@@ -53,16 +76,6 @@ const RecordsTab = () => {
                 <DialogTitle>New Medical Record</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="boarder_id">Boarder ID</Label>
-                  <Input
-                    id="boarder_id"
-                    value={newRecord.boarder_id}
-                    onChange={(e) =>
-                      setNewRecord({ ...newRecord, boarder_id: e.target.value })
-                    }
-                  />
-                </div>
                 <div className="grid gap-2">
                   <Label>Allergies</Label>
                   <div className="flex gap-2">

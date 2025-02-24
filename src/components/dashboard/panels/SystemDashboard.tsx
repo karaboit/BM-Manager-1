@@ -5,138 +5,184 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Users,
   Home,
-  Settings,
-  AlertTriangle,
   Activity,
-  Shield,
-  FileText,
+  Settings,
   Bell,
+  Shield,
+  Database,
+  Server,
+  Cpu,
+  HardDrive,
+  AlertTriangle,
+  CheckCircle2,
+  UserCog,
+  Building2,
+  FileText,
+  LayoutGrid,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useUsers } from "@/lib/hooks/useUsers";
+import { useRooms } from "@/lib/hooks/useRooms";
 
 const SystemDashboard = () => {
-  const systemStats = {
-    totalUsers: 250,
-    activeUsers: 235,
-    totalBoarders: 150,
-    occupancyRate: 95,
-    pendingApprovals: 5,
-    systemAlerts: 2,
-    maintenanceRequests: 3,
-    announcements: 4,
-  };
+  const navigate = useNavigate();
+  const { users } = useUsers();
+  const { houses } = useRooms();
+
+  const systemStats = [
+    {
+      title: "Total Users",
+      value: users.length,
+      change: "+2 this week",
+      icon: Users,
+      color: "text-blue-500",
+      link: "/users",
+    },
+    {
+      title: "Active Houses",
+      value: houses.length,
+      change: "All operational",
+      icon: Building2,
+      color: "text-green-500",
+      link: "/houses",
+    },
+    {
+      title: "System Health",
+      value: "98%",
+      change: "All systems normal",
+      icon: Activity,
+      color: "text-emerald-500",
+      link: "/health",
+    },
+    {
+      title: "Active Sessions",
+      value: "24",
+      change: "12 staff, 12 students",
+      icon: UserCog,
+      color: "text-violet-500",
+      link: "/sessions",
+    },
+  ];
+
+  const moduleStatus = [
+    {
+      name: "User Management",
+      status: "Operational",
+      icon: Users,
+      color: "text-green-500",
+      lastIncident: "No recent incidents",
+    },
+    {
+      name: "Room Management",
+      status: "Operational",
+      icon: LayoutGrid,
+      color: "text-green-500",
+      lastIncident: "No recent incidents",
+    },
+    {
+      name: "Attendance System",
+      status: "Operational",
+      icon: CheckCircle2,
+      color: "text-green-500",
+      lastIncident: "No recent incidents",
+    },
+    {
+      name: "Leave Management",
+      status: "Warning",
+      icon: FileText,
+      color: "text-yellow-500",
+      lastIncident: "High request volume",
+    },
+  ];
 
   const recentActivities = [
     {
-      id: "1",
-      type: "user",
-      action: "New user registration",
-      time: "5 minutes ago",
-    },
-    {
-      id: "2",
-      type: "system",
-      action: "System backup completed",
-      time: "1 hour ago",
-    },
-    {
-      id: "3",
       type: "security",
-      action: "Failed login attempt",
+      message: "New user account created",
+      time: "5 minutes ago",
+      icon: Shield,
+      user: "Admin",
+    },
+    {
+      type: "system",
+      message: "System backup completed",
+      time: "1 hour ago",
+      icon: Database,
+      user: "System",
+    },
+    {
+      type: "alert",
+      message: "High server load detected",
       time: "2 hours ago",
+      icon: AlertTriangle,
+      user: "System",
     },
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">System Overview</h1>
+    <div className="space-y-6 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">System Overview</h1>
+        <Button onClick={() => navigate("/config")}>
+          <Settings className="mr-2 h-4 w-4" />
+          System Settings
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Users className="mr-2 h-5 w-5 text-blue-500" />
-              Total Users
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{systemStats.totalUsers}</div>
-            <p className="text-sm text-muted-foreground">
-              {systemStats.activeUsers} active
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Home className="mr-2 h-5 w-5 text-green-500" />
-              Occupancy Rate
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {systemStats.occupancyRate}%
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {systemStats.totalBoarders} boarders
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <AlertTriangle className="mr-2 h-5 w-5 text-yellow-500" />
-              System Alerts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{systemStats.systemAlerts}</div>
-            <p className="text-sm text-muted-foreground">Require attention</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Activity className="mr-2 h-5 w-5 text-purple-500" />
-              Pending Approvals
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {systemStats.pendingApprovals}
-            </div>
-            <p className="text-sm text-muted-foreground">Awaiting review</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {systemStats.map((stat, index) => (
+          <Card
+            key={index}
+            className="hover:bg-accent/50 cursor-pointer transition-colors"
+            onClick={() => stat.link && navigate(stat.link)}
+          >
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">
+                {stat.title}
+              </CardTitle>
+              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <p className="text-xs text-muted-foreground">{stat.change}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle>Module Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" className="h-24 flex flex-col gap-2">
-                <Users className="h-6 w-6" />
-                Manage Users
-              </Button>
-              <Button variant="outline" className="h-24 flex flex-col gap-2">
-                <Settings className="h-6 w-6" />
-                System Settings
-              </Button>
-              <Button variant="outline" className="h-24 flex flex-col gap-2">
-                <Shield className="h-6 w-6" />
-                Security
-              </Button>
-              <Button variant="outline" className="h-24 flex flex-col gap-2">
-                <Bell className="h-6 w-6" />
-                Announcements
-              </Button>
+            <div className="space-y-4">
+              {moduleStatus.map((module, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-2 rounded-lg bg-accent/50"
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`p-2 rounded-full bg-background ${module.color}`}
+                    >
+                      <module.icon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{module.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {module.lastIncident}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={`text-sm font-bold px-2 py-1 rounded-full bg-background
+                    ${module.status === "Operational" ? "text-green-500" : "text-yellow-500"}`}
+                  >
+                    {module.status}
+                  </span>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -146,35 +192,32 @@ const SystemDashboard = () => {
             <CardTitle>Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[300px]">
+            <ScrollArea className="h-[300px] pr-4">
               <div className="space-y-4">
-                {recentActivities.map((activity) => (
+                {recentActivities.map((activity, index) => (
                   <div
-                    key={activity.id}
-                    className="flex items-start gap-4 border-b pb-4 last:border-0"
+                    key={index}
+                    className="flex items-center gap-4 p-2 rounded-lg hover:bg-accent/50"
                   >
                     <div
-                      className={`p-2 rounded-full ${
-                        activity.type === "user"
-                          ? "bg-blue-100"
+                      className={`p-2 rounded-full
+                      ${
+                        activity.type === "security"
+                          ? "bg-blue-100 text-blue-800"
                           : activity.type === "system"
-                            ? "bg-green-100"
-                            : "bg-yellow-100"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
                       }`}
                     >
-                      {activity.type === "user" ? (
-                        <Users className="h-4 w-4 text-blue-500" />
-                      ) : activity.type === "system" ? (
-                        <Settings className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <Shield className="h-4 w-4 text-yellow-500" />
-                      )}
+                      <activity.icon className="h-4 w-4" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium">{activity.action}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {activity.time}
-                      </p>
+                      <p className="font-medium">{activity.message}</p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{activity.time}</span>
+                        <span>•</span>
+                        <span>{activity.user}</span>
+                      </div>
                     </div>
                   </div>
                 ))}

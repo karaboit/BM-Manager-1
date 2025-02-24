@@ -1,5 +1,6 @@
 import React from "react";
 import { useDashboardStore } from "@/lib/store";
+import { getRoleDisplayName } from "@/lib/utils/roles";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,13 +11,13 @@ import {
   Wrench,
   Bell,
   LogOut,
-  Activity,
   LayoutGrid,
   UtensilsCrossed,
   CheckSquare,
   CalendarDays,
   Shield,
   Heart,
+  Activity,
 } from "lucide-react";
 import {
   Tooltip,
@@ -44,11 +45,8 @@ const Sidebar = ({
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "users", label: "User Management", icon: Users },
     { id: "rooms", label: "Room Management", icon: LayoutGrid },
-    { id: "medical", label: "Medical", icon: Activity },
-    { id: "kitchen", label: "Kitchen", icon: UtensilsCrossed },
-    { id: "attendance", label: "Attendance", icon: CheckSquare },
-    { id: "leave", label: "Leave Management", icon: CalendarDays },
-    { id: "discipline", label: "Discipline", icon: Shield },
+    { id: "mentor", label: "Mentor Groups", icon: Users },
+    { id: "medical", label: "Medical Records", icon: Activity },
     { id: "wellbeing", label: "Wellbeing", icon: Heart },
     { id: "events", label: "Events", icon: CalendarDays },
     { id: "config", label: "System Config", icon: Settings },
@@ -68,7 +66,9 @@ const Sidebar = ({
           />
         </div>
         <h3 className="font-semibold text-lg">{userName}</h3>
-        <p className="text-sm text-muted-foreground">{userRole}</p>
+        <p className="text-sm text-muted-foreground">
+          {getRoleDisplayName(userRole || "")}
+        </p>
       </div>
 
       <nav className="flex-1 space-y-2">

@@ -4,708 +4,1087 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[]
+  | Json[];
 
 export type Database = {
   public: {
     Tables: {
-      allergies: {
+      announcement_acknowledgments: {
         Row: {
-          allergy_type: string
-          created_at: string
-          created_by: string | null
-          id: string
-          notes: string | null
-          severity: string | null
-          student_id: string | null
-          symptoms: string[] | null
-          treatment: string | null
-          updated_at: string
-          updated_by: string | null
-        }
+          announcement_id: string;
+          created_at: string;
+          id: string;
+          user_id: string;
+        };
         Insert: {
-          allergy_type: string
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          notes?: string | null
-          severity?: string | null
-          student_id?: string | null
-          symptoms?: string[] | null
-          treatment?: string | null
-          updated_at?: string
-          updated_by?: string | null
-        }
+          announcement_id: string;
+          created_at?: string;
+          id?: string;
+          user_id: string;
+        };
         Update: {
-          allergy_type?: string
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          notes?: string | null
-          severity?: string | null
-          student_id?: string | null
-          symptoms?: string[] | null
-          treatment?: string | null
-          updated_at?: string
-          updated_by?: string | null
-        }
+          announcement_id?: string;
+          created_at?: string;
+          id?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "allergies_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "announcement_acknowledgments_announcement_id_fkey";
+            columns: ["announcement_id"];
+            isOneToOne: false;
+            referencedRelation: "announcements";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "allergies_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
+            foreignKeyName: "announcement_acknowledgments_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      announcements: {
+        Row: {
+          content: string;
+          created_at: string;
+          created_by: string;
+          end_date: string | null;
+          id: string;
+          priority: string;
+          start_date: string;
+          target_roles: string[];
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          content: string;
+          created_at?: string;
+          created_by: string;
+          end_date?: string | null;
+          id?: string;
+          priority: string;
+          start_date?: string;
+          target_roles: string[];
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          created_by?: string;
+          end_date?: string | null;
+          id?: string;
+          priority?: string;
+          start_date?: string;
+          target_roles?: string[];
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "announcements_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      attendance_records: {
+        Row: {
+          boarder_id: string | null;
+          created_at: string;
+          date: string;
+          id: string;
+          marked_by: string | null;
+          reason: string | null;
+          roll_call_type: string;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          boarder_id?: string | null;
+          created_at?: string;
+          date: string;
+          id?: string;
+          marked_by?: string | null;
+          reason?: string | null;
+          roll_call_type: string;
+          status: string;
+          updated_at?: string;
+        };
+        Update: {
+          boarder_id?: string | null;
+          created_at?: string;
+          date?: string;
+          id?: string;
+          marked_by?: string | null;
+          reason?: string | null;
+          roll_call_type?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_boarder_id_fkey";
+            columns: ["boarder_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "allergies_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "attendance_records_marked_by_fkey";
+            columns: ["marked_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-          {
-            foreignKeyName: "allergies_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "allergies_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "allergies_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
-          },
-        ]
-      }
+        ];
+      };
+      auth_users: {
+        Row: {
+          created_at: string | null;
+          email: string;
+          id: string;
+          password_hash: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          email: string;
+          id?: string;
+          password_hash: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          email?: string;
+          id?: string;
+          password_hash?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
       beds: {
         Row: {
-          created_at: string
-          id: string
-          name: string
-          room_id: string | null
-          student_id: string | null
-          updated_at: string
-        }
+          boarder_id: string | null;
+          created_at: string;
+          id: string;
+          room_id: string | null;
+          status: string | null;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          room_id?: string | null
-          student_id?: string | null
-          updated_at?: string
-        }
+          boarder_id?: string | null;
+          created_at?: string;
+          id?: string;
+          room_id?: string | null;
+          status?: string | null;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          room_id?: string | null
-          student_id?: string | null
-          updated_at?: string
-        }
+          boarder_id?: string | null;
+          created_at?: string;
+          id?: string;
+          room_id?: string | null;
+          status?: string | null;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "beds_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
+            foreignKeyName: "beds_boarder_id_fkey";
+            columns: ["boarder_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "beds_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "beds_room_id_fkey";
+            columns: ["room_id"];
+            isOneToOne: false;
+            referencedRelation: "rooms";
+            referencedColumns: ["id"];
           },
+        ];
+      };
+      chat_participants: {
+        Row: {
+          chat_id: string;
+          joined_at: string;
+          unread_count: number;
+          user_id: string;
+        };
+        Insert: {
+          chat_id: string;
+          joined_at?: string;
+          unread_count?: number;
+          user_id: string;
+        };
+        Update: {
+          chat_id?: string;
+          joined_at?: string;
+          unread_count?: number;
+          user_id?: string;
+        };
+        Relationships: [
           {
-            foreignKeyName: "beds_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: true
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
+            foreignKeyName: "chat_participants_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
+      chats: {
+        Row: {
+          allowed_roles: string[] | null;
+          avatar: string | null;
+          created_at: string;
+          description: string | null;
+          id: string;
+          last_message: Json | null;
+          name: string;
+          type: string;
+          updated_at: string;
+        };
+        Insert: {
+          allowed_roles?: string[] | null;
+          avatar?: string | null;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          last_message?: Json | null;
+          name: string;
+          type: string;
+          updated_at?: string;
+        };
+        Update: {
+          allowed_roles?: string[] | null;
+          avatar?: string | null;
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          last_message?: Json | null;
+          name?: string;
+          type?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       clinic_visits: {
         Row: {
-          created_by: string | null
-          diagnosis: string | null
-          follow_up_date: string | null
-          follow_up_needed: boolean | null
-          id: string
-          notes: string | null
-          student_id: string | null
-          symptoms: string[] | null
-          treatment: string | null
-          updated_by: string | null
-          visit_date: string
-        }
+          boarder_id: string | null;
+          created_at: string;
+          diagnosis: string | null;
+          follow_up_date: string | null;
+          id: string;
+          reason: string;
+          staff_id: string | null;
+          treatment: string | null;
+          updated_at: string;
+          visit_date: string;
+          vitals: Json;
+        };
         Insert: {
-          created_by?: string | null
-          diagnosis?: string | null
-          follow_up_date?: string | null
-          follow_up_needed?: boolean | null
-          id?: string
-          notes?: string | null
-          student_id?: string | null
-          symptoms?: string[] | null
-          treatment?: string | null
-          updated_by?: string | null
-          visit_date?: string
-        }
+          boarder_id?: string | null;
+          created_at?: string;
+          diagnosis?: string | null;
+          follow_up_date?: string | null;
+          id?: string;
+          reason: string;
+          staff_id?: string | null;
+          treatment?: string | null;
+          updated_at?: string;
+          visit_date?: string;
+          vitals?: Json;
+        };
         Update: {
-          created_by?: string | null
-          diagnosis?: string | null
-          follow_up_date?: string | null
-          follow_up_needed?: boolean | null
-          id?: string
-          notes?: string | null
-          student_id?: string | null
-          symptoms?: string[] | null
-          treatment?: string | null
-          updated_by?: string | null
-          visit_date?: string
-        }
+          boarder_id?: string | null;
+          created_at?: string;
+          diagnosis?: string | null;
+          follow_up_date?: string | null;
+          id?: string;
+          reason?: string;
+          staff_id?: string | null;
+          treatment?: string | null;
+          updated_at?: string;
+          visit_date?: string;
+          vitals?: Json;
+        };
         Relationships: [
           {
-            foreignKeyName: "clinic_visits_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "clinic_visits_boarder_id_fkey";
+            columns: ["boarder_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "clinic_visits_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
+            foreignKeyName: "clinic_visits_staff_id_fkey";
+            columns: ["staff_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-          {
-            foreignKeyName: "clinic_visits_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "clinic_visits_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "clinic_visits_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "clinic_visits_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
-          },
-        ]
-      }
-      health_records: {
+        ];
+      };
+      dietary_requirements: {
         Row: {
-          blood_type: string | null
-          created_at: string
-          created_by: string | null
-          emergency_contact: string | null
-          emergency_phone: string | null
-          height: number | null
-          id: string
-          medical_conditions: string[] | null
-          medications: string[] | null
-          notes: string | null
-          student_id: string | null
-          updated_at: string
-          updated_by: string | null
-          weight: number | null
-        }
+          boarder_id: string;
+          created_at: string;
+          details: string | null;
+          id: string;
+          medical_note: string | null;
+          requirement_type: string;
+          updated_at: string;
+        };
         Insert: {
-          blood_type?: string | null
-          created_at?: string
-          created_by?: string | null
-          emergency_contact?: string | null
-          emergency_phone?: string | null
-          height?: number | null
-          id?: string
-          medical_conditions?: string[] | null
-          medications?: string[] | null
-          notes?: string | null
-          student_id?: string | null
-          updated_at?: string
-          updated_by?: string | null
-          weight?: number | null
-        }
+          boarder_id: string;
+          created_at?: string;
+          details?: string | null;
+          id?: string;
+          medical_note?: string | null;
+          requirement_type: string;
+          updated_at?: string;
+        };
         Update: {
-          blood_type?: string | null
-          created_at?: string
-          created_by?: string | null
-          emergency_contact?: string | null
-          emergency_phone?: string | null
-          height?: number | null
-          id?: string
-          medical_conditions?: string[] | null
-          medications?: string[] | null
-          notes?: string | null
-          student_id?: string | null
-          updated_at?: string
-          updated_by?: string | null
-          weight?: number | null
-        }
+          boarder_id?: string;
+          created_at?: string;
+          details?: string | null;
+          id?: string;
+          medical_note?: string | null;
+          requirement_type?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "health_records_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "dietary_requirements_boarder_id_fkey";
+            columns: ["boarder_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      discipline_records: {
+        Row: {
+          approved_by: string | null;
+          boarder_id: string | null;
+          category: string;
+          completed_at: string | null;
+          created_at: string;
+          date: string;
+          id: string;
+          offense: string;
+          punishment: string | null;
+          reported_by: string | null;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          approved_by?: string | null;
+          boarder_id?: string | null;
+          category: string;
+          completed_at?: string | null;
+          created_at?: string;
+          date: string;
+          id?: string;
+          offense: string;
+          punishment?: string | null;
+          reported_by?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          approved_by?: string | null;
+          boarder_id?: string | null;
+          category?: string;
+          completed_at?: string | null;
+          created_at?: string;
+          date?: string;
+          id?: string;
+          offense?: string;
+          punishment?: string | null;
+          reported_by?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "discipline_records_approved_by_fkey";
+            columns: ["approved_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "health_records_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
+            foreignKeyName: "discipline_records_boarder_id_fkey";
+            columns: ["boarder_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "health_records_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "discipline_records_reported_by_fkey";
+            columns: ["reported_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-          {
-            foreignKeyName: "health_records_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "health_records_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "health_records_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
-          },
-        ]
-      }
+        ];
+      };
       houses: {
         Row: {
-          created_at: string
-          id: string
-          name: string
-          updated_at: string
-        }
+          capacity: number;
+          created_at: string;
+          id: string;
+          name: string;
+          status: string | null;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          updated_at?: string
-        }
+          capacity?: number;
+          created_at?: string;
+          id?: string;
+          name: string;
+          status?: string | null;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          capacity?: number;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          status?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      immunizations: {
+        Row: {
+          administered_by: string;
+          administered_date: string;
+          boarder_id: string;
+          created_at: string;
+          dose_number: number;
+          id: string;
+          next_dose_date: string | null;
+          notes: string | null;
+          updated_at: string;
+          vaccine_name: string;
+        };
+        Insert: {
+          administered_by: string;
+          administered_date: string;
+          boarder_id: string;
+          created_at?: string;
+          dose_number?: number;
+          id?: string;
+          next_dose_date?: string | null;
+          notes?: string | null;
+          updated_at?: string;
+          vaccine_name: string;
+        };
+        Update: {
+          administered_by?: string;
+          administered_date?: string;
+          boarder_id?: string;
+          created_at?: string;
+          dose_number?: number;
+          id?: string;
+          next_dose_date?: string | null;
+          notes?: string | null;
+          updated_at?: string;
+          vaccine_name?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "immunizations_administered_by_fkey";
+            columns: ["administered_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "immunizations_boarder_id_fkey";
+            columns: ["boarder_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       leave_requests: {
         Row: {
-          created_at: string
-          created_by: string | null
-          end_date: string
-          id: string
-          parent_approved: boolean | null
-          reason: string | null
-          start_date: string
-          status: string | null
-          student_id: string | null
-          updated_at: string
-          updated_by: string | null
-        }
+          boarder_id: string | null;
+          created_at: string;
+          end_date: string;
+          house_master_approval_date: string | null;
+          id: string;
+          parent_approval_date: string | null;
+          reason: string;
+          start_date: string;
+          status: string;
+          type: string;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          created_by?: string | null
-          end_date: string
-          id?: string
-          parent_approved?: boolean | null
-          reason?: string | null
-          start_date: string
-          status?: string | null
-          student_id?: string | null
-          updated_at?: string
-          updated_by?: string | null
-        }
+          boarder_id?: string | null;
+          created_at?: string;
+          end_date: string;
+          house_master_approval_date?: string | null;
+          id?: string;
+          parent_approval_date?: string | null;
+          reason: string;
+          start_date: string;
+          status?: string;
+          type: string;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          created_by?: string | null
-          end_date?: string
-          id?: string
-          parent_approved?: boolean | null
-          reason?: string | null
-          start_date?: string
-          status?: string | null
-          student_id?: string | null
-          updated_at?: string
-          updated_by?: string | null
-        }
+          boarder_id?: string | null;
+          created_at?: string;
+          end_date?: string;
+          house_master_approval_date?: string | null;
+          id?: string;
+          parent_approval_date?: string | null;
+          reason?: string;
+          start_date?: string;
+          status?: string;
+          type?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "leave_requests_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "leave_requests_boarder_id_fkey";
+            columns: ["boarder_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-          {
-            foreignKeyName: "leave_requests_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "leave_requests_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "leave_requests_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "leave_requests_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
-          },
-        ]
-      }
-      maintenance_requests: {
+        ];
+      };
+      meal_plans: {
         Row: {
-          created_at: string
-          created_by: string | null
-          description: string
-          id: string
-          priority: string | null
-          room_id: string | null
-          status: string | null
-          updated_at: string
-          updated_by: string | null
-        }
+          created_at: string;
+          created_by: string;
+          date: string;
+          dietary_requirements: Json | null;
+          expected_count: number;
+          id: string;
+          meal_type: string;
+          menu: string;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          created_by?: string | null
-          description: string
-          id?: string
-          priority?: string | null
-          room_id?: string | null
-          status?: string | null
-          updated_at?: string
-          updated_by?: string | null
-        }
+          created_at?: string;
+          created_by: string;
+          date: string;
+          dietary_requirements?: Json | null;
+          expected_count: number;
+          id?: string;
+          meal_type: string;
+          menu: string;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          created_by?: string | null
-          description?: string
-          id?: string
-          priority?: string | null
-          room_id?: string | null
-          status?: string | null
-          updated_at?: string
-          updated_by?: string | null
-        }
+          created_at?: string;
+          created_by?: string;
+          date?: string;
+          dietary_requirements?: Json | null;
+          expected_count?: number;
+          id?: string;
+          meal_type?: string;
+          menu?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "maintenance_requests_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "meal_plans_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-          {
-            foreignKeyName: "maintenance_requests_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "maintenance_requests_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "maintenance_requests_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "maintenance_requests_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
-          },
-        ]
-      }
-      parent_student_relationships: {
+        ];
+      };
+      medical_records: {
         Row: {
-          created_at: string | null
-          id: string
-          parent_id: string | null
-          student_id: string | null
-        }
+          allergies: string[] | null;
+          blood_type: string | null;
+          boarder_id: string | null;
+          chronic_conditions: string[] | null;
+          created_at: string;
+          emergency_contact: string;
+          id: string;
+          notes: string | null;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string | null
-          id?: string
-          parent_id?: string | null
-          student_id?: string | null
-        }
+          allergies?: string[] | null;
+          blood_type?: string | null;
+          boarder_id?: string | null;
+          chronic_conditions?: string[] | null;
+          created_at?: string;
+          emergency_contact: string;
+          id?: string;
+          notes?: string | null;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string | null
-          id?: string
-          parent_id?: string | null
-          student_id?: string | null
-        }
+          allergies?: string[] | null;
+          blood_type?: string | null;
+          boarder_id?: string | null;
+          chronic_conditions?: string[] | null;
+          created_at?: string;
+          emergency_contact?: string;
+          id?: string;
+          notes?: string | null;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "parent_student_relationships_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: "medical_records_boarder_id_fkey";
+            columns: ["boarder_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-          {
-            foreignKeyName: "parent_student_relationships_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "parent_student_relationships_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "parent_student_relationships_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["student_id"]
-          },
-        ]
-      }
-      profiles: {
+        ];
+      };
+      medication_logs: {
         Row: {
-          created_at: string
-          email: string
-          full_name: string | null
-          house_id: string | null
-          id: string
-          role: string | null
-          updated_at: string
-        }
+          administered_at: string;
+          administered_by: string;
+          created_at: string;
+          id: string;
+          notes: string | null;
+          schedule_id: string;
+          status: string;
+        };
         Insert: {
-          created_at?: string
-          email: string
-          full_name?: string | null
-          house_id?: string | null
-          id: string
-          role?: string | null
-          updated_at?: string
-        }
+          administered_at?: string;
+          administered_by: string;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          schedule_id: string;
+          status: string;
+        };
         Update: {
-          created_at?: string
-          email?: string
-          full_name?: string | null
-          house_id?: string | null
-          id?: string
-          role?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          administered_at?: string;
+          administered_by?: string;
+          created_at?: string;
+          id?: string;
+          notes?: string | null;
+          schedule_id?: string;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "medication_logs_administered_by_fkey";
+            columns: ["administered_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "medication_logs_schedule_id_fkey";
+            columns: ["schedule_id"];
+            isOneToOne: false;
+            referencedRelation: "medication_schedules";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      medication_schedules: {
+        Row: {
+          boarder_id: string;
+          created_at: string;
+          dosage: string;
+          end_date: string | null;
+          frequency: string;
+          id: string;
+          medicine_name: string;
+          notes: string | null;
+          start_date: string;
+          updated_at: string;
+        };
+        Insert: {
+          boarder_id: string;
+          created_at?: string;
+          dosage: string;
+          end_date?: string | null;
+          frequency: string;
+          id?: string;
+          medicine_name: string;
+          notes?: string | null;
+          start_date: string;
+          updated_at?: string;
+        };
+        Update: {
+          boarder_id?: string;
+          created_at?: string;
+          dosage?: string;
+          end_date?: string | null;
+          frequency?: string;
+          id?: string;
+          medicine_name?: string;
+          notes?: string | null;
+          start_date?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "medication_schedules_boarder_id_fkey";
+            columns: ["boarder_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      menu_templates: {
+        Row: {
+          created_at: string;
+          created_by: string;
+          dietary_notes: string | null;
+          id: string;
+          items: string;
+          name: string;
+          type: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          created_by: string;
+          dietary_notes?: string | null;
+          id?: string;
+          items: string;
+          name: string;
+          type: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string;
+          dietary_notes?: string | null;
+          id?: string;
+          items?: string;
+          name?: string;
+          type?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "menu_templates_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      messages: {
+        Row: {
+          attachments: string[] | null;
+          chat_id: string | null;
+          content: string;
+          id: string;
+          reply_to: string | null;
+          sender_id: string | null;
+          timestamp: string;
+        };
+        Insert: {
+          attachments?: string[] | null;
+          chat_id?: string | null;
+          content: string;
+          id?: string;
+          reply_to?: string | null;
+          sender_id?: string | null;
+          timestamp?: string;
+        };
+        Update: {
+          attachments?: string[] | null;
+          chat_id?: string | null;
+          content?: string;
+          id?: string;
+          reply_to?: string | null;
+          sender_id?: string | null;
+          timestamp?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "messages_chat_id_fkey";
+            columns: ["chat_id"];
+            isOneToOne: false;
+            referencedRelation: "chats";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "messages_reply_to_fkey";
+            columns: ["reply_to"];
+            isOneToOne: false;
+            referencedRelation: "messages";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      packed_meals: {
+        Row: {
+          boarder_id: string;
+          created_at: string;
+          id: string;
+          meal_plan_id: string;
+          reason: string;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          boarder_id: string;
+          created_at?: string;
+          id?: string;
+          meal_plan_id: string;
+          reason: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          boarder_id?: string;
+          created_at?: string;
+          id?: string;
+          meal_plan_id?: string;
+          reason?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "packed_meals_boarder_id_fkey";
+            columns: ["boarder_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "packed_meals_meal_plan_id_fkey";
+            columns: ["meal_plan_id"];
+            isOneToOne: false;
+            referencedRelation: "meal_plans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      role_mappings: {
+        Row: {
+          created_at: string;
+          new_role_id: string;
+          old_role_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          new_role_id: string;
+          old_role_id: string;
+        };
+        Update: {
+          created_at?: string;
+          new_role_id?: string;
+          old_role_id?: string;
+        };
+        Relationships: [];
+      };
+      roles: {
+        Row: {
+          created_at: string | null;
+          description: string | null;
+          id: string;
+          name: string;
+          role_key: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          description?: string | null;
+          id?: string;
+          name: string;
+          role_key: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          role_key?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      roles_backup: {
+        Row: {
+          created_at: string | null;
+          description: string | null;
+          id: string | null;
+          name: string | null;
+          role_key: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          description?: string | null;
+          id?: string | null;
+          name?: string | null;
+          role_key?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          description?: string | null;
+          id?: string | null;
+          name?: string | null;
+          role_key?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      roles_new: {
+        Row: {
+          created_at: string;
+          description: string | null;
+          id: string;
+          name: string;
+          permissions: Json | null;
+          role_key: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          name: string;
+          permissions?: Json | null;
+          role_key: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          description?: string | null;
+          id?: string;
+          name?: string;
+          permissions?: Json | null;
+          role_key?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       rooms: {
         Row: {
-          created_at: string
-          floor: number | null
-          house_id: string | null
-          id: string
-          name: string
-          updated_at: string
-        }
+          capacity: number;
+          created_at: string;
+          house_id: string | null;
+          id: string;
+          last_cleaned: string | null;
+          room_number: string;
+          status: string | null;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          floor?: number | null
-          house_id?: string | null
-          id?: string
-          name: string
-          updated_at?: string
-        }
+          capacity?: number;
+          created_at?: string;
+          house_id?: string | null;
+          id?: string;
+          last_cleaned?: string | null;
+          room_number: string;
+          status?: string | null;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          floor?: number | null
-          house_id?: string | null
-          id?: string
-          name?: string
-          updated_at?: string
-        }
+          capacity?: number;
+          created_at?: string;
+          house_id?: string | null;
+          id?: string;
+          last_cleaned?: string | null;
+          room_number?: string;
+          status?: string | null;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "rooms_house_id_fkey"
-            columns: ["house_id"]
-            isOneToOne: false
-            referencedRelation: "house_statistics"
-            referencedColumns: ["house_id"]
+            foreignKeyName: "rooms_house_id_fkey";
+            columns: ["house_id"];
+            isOneToOne: false;
+            referencedRelation: "houses";
+            referencedColumns: ["id"];
           },
+        ];
+      };
+      users: {
+        Row: {
+          created_at: string | null;
+          email: string;
+          full_name: string;
+          id: string;
+          role_id: string | null;
+          status: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          email: string;
+          full_name: string;
+          id?: string;
+          role_id?: string | null;
+          status?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          email?: string;
+          full_name?: string;
+          id?: string;
+          role_id?: string | null;
+          status?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
           {
-            foreignKeyName: "rooms_house_id_fkey"
-            columns: ["house_id"]
-            isOneToOne: false
-            referencedRelation: "houses"
-            referencedColumns: ["id"]
+            foreignKeyName: "users_role_id_fkey";
+            columns: ["role_id"];
+            isOneToOne: false;
+            referencedRelation: "roles";
+            referencedColumns: ["id"];
           },
-          {
-            foreignKeyName: "rooms_house_id_fkey"
-            columns: ["house_id"]
-            isOneToOne: false
-            referencedRelation: "maintenance_statistics"
-            referencedColumns: ["house_id"]
-          },
-          {
-            foreignKeyName: "rooms_house_id_fkey"
-            columns: ["house_id"]
-            isOneToOne: false
-            referencedRelation: "medical_statistics"
-            referencedColumns: ["house_id"]
-          },
-          {
-            foreignKeyName: "rooms_house_id_fkey"
-            columns: ["house_id"]
-            isOneToOne: false
-            referencedRelation: "student_statistics"
-            referencedColumns: ["house_id"]
-          },
-        ]
-      }
-    }
+        ];
+      };
+    };
     Views: {
-      house_statistics: {
-        Row: {
-          house_id: string | null
-          house_name: string | null
-          occupied_beds: number | null
-          pending_leave_requests: number | null
-          pending_maintenance: number | null
-          total_beds: number | null
-          total_students: number | null
-        }
-        Relationships: []
-      }
-      maintenance_statistics: {
-        Row: {
-          avg_hours_to_resolve: number | null
-          house_id: string | null
-          house_name: string | null
-          status: string | null
-          total_requests: number | null
-        }
-        Relationships: []
-      }
-      medical_statistics: {
-        Row: {
-          follow_ups_needed: number | null
-          house_id: string | null
-          house_name: string | null
-          month: string | null
-          severe_allergies: number | null
-          total_allergies: number | null
-          total_visits: number | null
-        }
-        Relationships: []
-      }
-      student_statistics: {
-        Row: {
-          allergies: number | null
-          clinic_visits: number | null
-          full_name: string | null
-          house_id: string | null
-          house_name: string | null
-          pending_leave_requests: number | null
-          student_id: string | null
-          total_leave_requests: number | null
-        }
-        Relationships: []
-      }
-    }
+      [_ in never]: never;
+    };
     Functions: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Enums: {
-      [_ in never]: never
-    }
+      user_role:
+        | "system_admin"
+        | "director"
+        | "house_master"
+        | "deputy_master"
+        | "medical"
+        | "kitchen"
+        | "parent"
+        | "boarder"
+        | "support_staff";
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
+      [_ in never]: never;
+    };
+  };
+};
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type PublicSchema = Database[Extract<keyof Database, "public">];
 
 export type Tables<
   PublicTableNameOrOptions extends
@@ -718,7 +1097,7 @@ export type Tables<
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
       Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
+      Row: infer R;
     }
     ? R
     : never
@@ -726,11 +1105,11 @@ export type Tables<
         PublicSchema["Views"])
     ? (PublicSchema["Tables"] &
         PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-        Row: infer R
+        Row: infer R;
       }
       ? R
       : never
-    : never
+    : never;
 
 export type TablesInsert<
   PublicTableNameOrOptions extends
@@ -741,17 +1120,17 @@ export type TablesInsert<
     : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
+      Insert: infer I;
     }
     ? I
     : never
   : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
     ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Insert: infer I
+        Insert: infer I;
       }
       ? I
       : never
-    : never
+    : never;
 
 export type TablesUpdate<
   PublicTableNameOrOptions extends
@@ -762,17 +1141,17 @@ export type TablesUpdate<
     : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
+      Update: infer U;
     }
     ? U
     : never
   : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
     ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Update: infer U
+        Update: infer U;
       }
       ? U
       : never
-    : never
+    : never;
 
 export type Enums<
   PublicEnumNameOrOptions extends
@@ -785,14 +1164,14 @@ export type Enums<
   ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
     ? PublicSchema["Enums"][PublicEnumNameOrOptions]
-    : never
+    : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof PublicSchema["CompositeTypes"]
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof Database;
   }
     ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
@@ -800,4 +1179,4 @@ export type CompositeTypes<
   ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+    : never;
